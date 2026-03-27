@@ -41,7 +41,7 @@ const Attributes = () => {
       const response = await fetch(`${BASE_URL}wc/v3/products/attributes`, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getJWTHeader(),
+          'Authorization': API_CONFIG.getBasicAuthHeader(),
         },
       })
 

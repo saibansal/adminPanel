@@ -104,7 +104,7 @@ const AddProduct = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const headers = { 'Authorization': API_CONFIG.getJWTHeader() }
+        const headers = { 'Authorization': API_CONFIG.getBasicAuthHeader() }
         const [catRes, attrRes, taxRes, shipRes, prodRes] = await Promise.all([
           fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories`, { headers }),
           fetch(`${API_CONFIG.BASE_URL}wc/v3/products/attributes`, { headers }),
@@ -134,7 +134,7 @@ const AddProduct = () => {
     const fetchProduct = async () => {
       setInitialDataLoading(true)
       try {
-        const headers = { 'Authorization': API_CONFIG.getJWTHeader() }
+        const headers = { 'Authorization': API_CONFIG.getBasicAuthHeader() }
         const res = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}`, { headers })
         if (res.ok) {
           const data = await res.json()
@@ -314,7 +314,7 @@ const AddProduct = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getJWTHeader()
+          'Authorization': API_CONFIG.getBasicAuthHeader()
         },
         body: JSON.stringify({ name: newCatName.trim() })
       });
@@ -378,7 +378,7 @@ const AddProduct = () => {
     let fetchedTerms = [];
     try {
       const resp = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/attributes/${attr.id}/terms`, {
-        headers: { 'Authorization': API_CONFIG.getJWTHeader() }
+        headers: { 'Authorization': API_CONFIG.getBasicAuthHeader() }
       });
       if (resp.ok) fetchedTerms = await resp.json();
     } catch (e) {
@@ -607,7 +607,7 @@ const AddProduct = () => {
         method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getJWTHeader()
+          'Authorization': API_CONFIG.getBasicAuthHeader()
         },
         body: JSON.stringify(submissionData)
       })
@@ -637,7 +637,7 @@ const AddProduct = () => {
             method: varId ? 'PUT' : 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': API_CONFIG.getJWTHeader()
+              'Authorization': API_CONFIG.getBasicAuthHeader()
             },
             body: JSON.stringify(varData)
           });

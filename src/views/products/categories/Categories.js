@@ -43,7 +43,7 @@ const Categories = () => {
       let response = await fetch(`${BASE_URL}wc/v3/products/categories`, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getJWTHeader()
+          'Authorization': API_CONFIG.getBasicAuthHeader()
         }
       })
 

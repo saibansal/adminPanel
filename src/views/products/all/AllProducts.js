@@ -59,7 +59,7 @@ const AllProducts = () => {
         const response = await fetch(`${BASE_URL}wc/v3/products?per_page=100&page=${page}`, {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': API_CONFIG.getJWTHeader(),
+            'Authorization': API_CONFIG.getBasicAuthHeader(),
           },
         })
 
@@ -124,7 +124,7 @@ const AllProducts = () => {
       const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}?force=true`, {
         method: 'DELETE',
         headers: {
-          'Authorization': API_CONFIG.getJWTHeader(),
+          'Authorization': API_CONFIG.getBasicAuthHeader(),
         },
       })
 

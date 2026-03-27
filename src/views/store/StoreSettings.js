@@ -22,6 +22,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSettings, cilSave, cilCheckCircle } from '@coreui/icons'
+import StripeSettings from './StripeSettings'
 
 const StoreSettings = () => {
   const [activeTab, setActiveTab] = useState('general')
@@ -47,6 +48,7 @@ const StoreSettings = () => {
     { id: 'tax', name: 'Tax' },
     { id: 'shipping', name: 'Shipping' },
     { id: 'payments', name: 'Payments' },
+    { id: 'stripe', name: 'Stripe Config' },
     { id: 'privacy', name: 'Accounts & Privacy' },
     { id: 'emails', name: 'Emails' },
     { id: 'integration', name: 'Integration' },
@@ -307,6 +309,10 @@ const StoreSettings = () => {
                         </div>
                     </CTabPane>
 
+                    <CTabPane visible={activeTab === 'stripe'}>
+                        <StripeSettings />
+                    </CTabPane>
+
                     <CTabPane visible={activeTab === 'pos'}>
                          <CAlert color="info" className="d-flex align-items-center">
                              <div>Point of Sale (POS) integration is active. You can manage your physical terminals here.</div>
@@ -316,7 +322,7 @@ const StoreSettings = () => {
                     </CTabPane>
 
                     {/* Fallback for other tabs */}
-                    {!['general', 'products', 'tax', 'payments', 'pos'].includes(activeTab) && (
+                    {!['general', 'products', 'tax', 'payments', 'pos', 'stripe'].includes(activeTab) && (
                         <div className="text-center py-5">
                              <div className="text-muted mb-3">Settings for <strong>{tabs.find(t => t.id === activeTab)?.name}</strong> are being synchronized with your WordPress site.</div>
                              <CButton color="light" size="sm">Fetch Remote Config</CButton>
