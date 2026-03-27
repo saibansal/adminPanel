@@ -343,7 +343,7 @@ const StoreSettings = () => {
                                             <CButton color="primary" size="sm" onClick={() => setShowAddZoneModal(true)}>
                                                 <CIcon icon={cilReload} className="me-1" style={{ transform: 'rotate(45deg)' }} /> Add shipping zone
                                             </CButton>
-                                            <CButton color="outline-primary" size="sm" onClick={() => window.open('http://localhost/wordpress/wordpress-backend/wp-admin/admin.php?page=wc-settings&tab=shipping', '_blank')}>
+                                            <CButton color="outline-primary" size="sm" onClick={() => window.open('https://dev.vismaad.com/estore/wp-admin/admin.php?page=wc-settings&tab=shipping', '_blank')}>
                                                 Manage in WP Admin
                                             </CButton>
                                         </div>
@@ -400,11 +400,11 @@ const StoreSettings = () => {
                                             Enter a name for this zone (e.g., "North America" or "Local Pickup") and you'll be able to configure regions and methods in your WooCommerce dashboard.
                                         </p>
                                         <CFormLabel>Zone Name</CFormLabel>
-                                        <CFormInput 
-                                            placeholder="e.g. Domestic" 
-                                            value={newZoneName} 
+                                        <CFormInput
+                                            placeholder="e.g. Domestic"
+                                            value={newZoneName}
                                             onChange={(e) => setNewZoneName(e.target.value)}
-                                            required 
+                                            required
                                         />
                                     </CModalBody>
                                     <CModalFooter>
