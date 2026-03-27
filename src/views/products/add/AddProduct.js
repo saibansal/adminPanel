@@ -31,7 +31,6 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilSave, cilImage, cilTrash, cilCloudUpload } from '@coreui/icons'
 import API_CONFIG from 'src/apiConfig'
-import { convertToWebP } from 'src/utils/imageUtils'
 
 const AddProduct = () => {
   const { id } = useParams()
@@ -251,16 +250,6 @@ const AddProduct = () => {
     try {
       for (let i = 0; i < files.length; i++) {
         let file = files[i];
-        
-        // Convert to WebP with 0.8 quality for best compression/quality balance
-        console.log(`Converting ${file.name} to WebP...`);
-        try {
-          file = await convertToWebP(file, 0.8);
-          console.log(`Conversion successful: ${file.name}`);
-        } catch (webpErr) {
-          console.error('WebP conversion failed, uploading original:', webpErr);
-        }
-
         const uploaded = await uploadImage(file);
         if (uploaded) {
           uploadedImages.push({ src: uploaded.source_url });

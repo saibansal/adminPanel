@@ -20,7 +20,6 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilSave, cilTrash, cilImage, cilPlus } from '@coreui/icons'
 import API_CONFIG from 'src/apiConfig'
-import { convertToWebP } from 'src/utils/imageUtils'
 
 const AddPost = () => {
   const { id } = useParams()
@@ -123,15 +122,7 @@ const AddPost = () => {
     if (!file) return
     setUploading(true)
     try {
-      // Convert to WebP for best compression
       let processedFile = file;
-      try {
-        console.log(`Converting ${file.name} to WebP...`);
-        processedFile = await convertToWebP(file, 0.8);
-      } catch (webpErr) {
-        console.error('WebP conversion failed, uploading original:', webpErr);
-      }
-
       const formData = new FormData()
       formData.append('file', processedFile)
       formData.append('title', processedFile.name)
