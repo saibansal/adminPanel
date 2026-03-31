@@ -60,7 +60,7 @@ const AddCoupon = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const headers = { 'Authorization': API_CONFIG.getJWTHeader() }
+        const headers = { 'Authorization': API_CONFIG.getBasicAuthHeader() }
         const [catRes, prodRes] = await Promise.all([
           fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories?per_page=100`, { headers }),
           fetch(`${API_CONFIG.BASE_URL}wc/v3/products?per_page=100`, { headers }),
@@ -151,7 +151,7 @@ const AddCoupon = () => {
         method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getJWTHeader()
+          'Authorization': API_CONFIG.getBasicAuthHeader()
         },
         body: JSON.stringify(submissionData)
       })
@@ -200,7 +200,7 @@ const AddCoupon = () => {
                   size="lg"
                   placeholder="Coupon code"
                   className="fw-bold border-primary border-2 mb-2"
-                  value={couponData.code}
+                  value={couponData.code || ""}
                   onChange={handleChange}
                   required
                 />
@@ -209,7 +209,7 @@ const AddCoupon = () => {
                   placeholder="Description (optional)"
                   rows="2"
                   className="bg-light border-0"
-                  value={couponData.description}
+                  value={couponData.description || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -262,7 +262,7 @@ const AddCoupon = () => {
                           <CRow className="mb-3">
                             <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Coupon amount</CFormLabel>
                             <CCol sm={8}>
-                              <CFormInput type="text" id="amount" value={couponData.amount} onChange={handleChange} placeholder="0" />
+                              <CFormInput type="text" id="amount" value={couponData.amount || ""} onChange={handleChange} placeholder="0" />
                             </CCol>
                           </CRow>
                           <CRow className="mb-3">
@@ -274,7 +274,7 @@ const AddCoupon = () => {
                           <CRow className="mb-3">
                             <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Coupon expiry date</CFormLabel>
                             <CCol sm={8}>
-                              <CFormInput type="date" id="date_expires" value={couponData.date_expires} onChange={handleChange} />
+                              <CFormInput type="date" id="date_expires" value={couponData.date_expires || ""} onChange={handleChange} />
                             </CCol>
                           </CRow>
                         </CTabPane>
@@ -284,13 +284,13 @@ const AddCoupon = () => {
                           <CRow className="mb-3">
                             <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Minimum spend</CFormLabel>
                             <CCol sm={8}>
-                              <CFormInput type="text" id="minimum_amount" value={couponData.minimum_amount} onChange={handleChange} placeholder="No minimum" />
+                              <CFormInput type="text" id="minimum_amount" value={couponData.minimum_amount || ""} onChange={handleChange} placeholder="No minimum" />
                             </CCol>
                           </CRow>
                           <CRow className="mb-3">
                             <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Maximum spend</CFormLabel>
                             <CCol sm={8}>
-                              <CFormInput type="text" id="maximum_amount" value={couponData.maximum_amount} onChange={handleChange} placeholder="No maximum" />
+                              <CFormInput type="text" id="maximum_amount" value={couponData.maximum_amount || ""} onChange={handleChange} placeholder="No maximum" />
                             </CCol>
                           </CRow>
                           <CRow className="mb-3">
@@ -351,19 +351,19 @@ const AddCoupon = () => {
                           <CRow className="mb-3">
                             <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Usage limit per coupon</CFormLabel>
                             <CCol sm={8}>
-                              <CFormInput type="number" id="usage_limit" value={couponData.usage_limit} onChange={handleChange} placeholder="Unlimited usage" />
+                              <CFormInput type="number" id="usage_limit" value={couponData.usage_limit || ""} onChange={handleChange} placeholder="Unlimited usage" />
                             </CCol>
                           </CRow>
                           <CRow className="mb-3">
                             <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Limit usage to X items</CFormLabel>
                             <CCol sm={8}>
-                              <CFormInput type="number" id="limit_usage_to_x_items" value={couponData.limit_usage_to_x_items} onChange={handleChange} placeholder="All qualifying items in cart" />
+                              <CFormInput type="number" id="limit_usage_to_x_items" value={couponData.limit_usage_to_x_items || ""} onChange={handleChange} placeholder="All qualifying items in cart" />
                             </CCol>
                           </CRow>
                           <CRow className="mb-3">
                             <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Usage limit per user</CFormLabel>
                             <CCol sm={8}>
-                              <CFormInput type="number" id="usage_limit_per_user" value={couponData.usage_limit_per_user} onChange={handleChange} placeholder="Unlimited usage" />
+                              <CFormInput type="number" id="usage_limit_per_user" value={couponData.usage_limit_per_user || ""} onChange={handleChange} placeholder="Unlimited usage" />
                             </CCol>
                           </CRow>
                         </CTabPane>

@@ -53,12 +53,10 @@ const AddPost = () => {
     if (!newCatName) return
     setAddingCat(true)
     try {
+      const headers = { 'Content-Type': 'application/json', 'Authorization': API_CONFIG.getJWTHeader() }
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/categories`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getJWTHeader()
-        },
+        headers,
         body: JSON.stringify({
           name: newCatName,
           parent: parseInt(parentCat)

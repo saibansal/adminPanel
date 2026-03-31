@@ -46,8 +46,8 @@ const AllUsers = () => {
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/users?context=edit`, {
         headers: {
-          'Authorization': API_CONFIG.getJWTHeader(),
-        },
+          'Authorization': API_CONFIG.getJWTHeader()
+        }
       })
       if (response.ok) {
         setUsers(await response.json())
@@ -78,8 +78,8 @@ const AllUsers = () => {
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/users/${id}?reassign=1`, {
         method: 'DELETE',
         headers: {
-          'Authorization': API_CONFIG.getJWTHeader(),
-        },
+          'Authorization': API_CONFIG.getJWTHeader()
+        }
       })
       if (response.ok) {
         setUsers(users.filter((u) => u.id !== id))

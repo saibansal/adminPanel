@@ -45,9 +45,9 @@ const AddPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const headers = { 'Authorization': API_CONFIG.getJWTHeader() }
+        const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
         if (isEditMode) {
-          const res = await fetch(`${API_CONFIG.BASE_URL}wp/v2/pages/${id}?_embed`, { headers })
+          const res = await fetch(`${API_CONFIG.BASE_URL}wp/v2/pages/${id}?_embed&${authParams}`)
           if (res.ok) {
             const data = await res.json()
             setPageData({
@@ -77,9 +77,9 @@ const AddPage = () => {
       const formData = new FormData()
       formData.append('file', processedFile)
       formData.append('title', processedFile.name)
-      const res = await fetch(`${API_CONFIG.BASE_URL}wp/v2/media`, {
+      const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+      const res = await fetch(`${API_CONFIG.BASE_URL}wp/v2/media?${authParams}`, {
         method: 'POST',
-        headers: { 'Authorization': API_CONFIG.getJWTHeader() },
         body: formData
       })
       if (res.ok) {
@@ -115,12 +115,12 @@ const AddPage = () => {
         payload.parent = pageData.parent
       }
 
-      const apiUrl = `${API_CONFIG.BASE_URL}wp/v2/pages${isEditMode ? `/${id}` : ''}`
+      const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+      const apiUrl = `${API_CONFIG.BASE_URL}wp/v2/pages${isEditMode ? `/${id}` : ''}?${authParams}`
       const response = await fetch(apiUrl, {
         method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getJWTHeader()
         },
         body: JSON.stringify(payload)
       })

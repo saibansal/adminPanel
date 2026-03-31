@@ -46,19 +46,30 @@ const AllPosts = () => {
   const fetchPosts = async () => {
     setLoading(true)
     setError(null)
+    
+    let allData = []
+    let pageNum = 1
+    let totalPages = 1
+
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts?status=publish,draft,pending,private,future&_embed`, {
-        headers: {
-          'Authorization': API_CONFIG.getJWTHeader(),
-        },
-      })
+      const headers = { 'Authorization': API_CONFIG.getJWTHeader() }
+      do {
+        const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts?status=publish,draft,pending,private,future&_embed&per_page=100&page=${pageNum}`, {
+          headers
+        })
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch posts')
-      }
+        if (!response.ok) {
+          throw new Error(`Failed to fetch posts (Page ${pageNum})`)
+        }
 
-      const data = await response.json()
-      setPosts(data)
+        const data = await response.json()
+        allData = [...allData, ...data]
+        
+        totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '1')
+        pageNum++
+      } while (pageNum <= totalPages)
+
+      setPosts(allData)
     } catch (err) {
       console.error('Fetch error:', err)
       setError(err.message)
@@ -72,15 +83,13 @@ const AllPosts = () => {
   }
 
   const confirmDeletePost = async () => {
-    const id = deleteConfirm.id
-    setDeleteConfirm({ visible: false, id: null })
-    setProcessingId(id)
     try {
+      setProcessingId(id)
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': API_CONFIG.getJWTHeader(),
-        },
+          'Authorization': API_CONFIG.getJWTHeader()
+        }
       })
 
       if (response.ok) {
