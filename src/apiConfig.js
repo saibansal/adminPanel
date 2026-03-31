@@ -7,7 +7,8 @@
 
 const API_CONFIG = {
   // Use Vercel Environment Variables or fallback to Local Sync
-  BASE_URL: import.meta.env.VITE_API_URL || 'https://dev.vismaad.com/estore/wp-json/',
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost/wordpress/wordpress-backend/wp-json/',
+
 
   //   {
   //   "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0L3dvcmRwcmVzcy93b3JkcHJlc3MtYmFja2VuZCIsImlhdCI6MTc3NDQ0MDM5MiwibmJmIjoxNzc0NDQwMzkyLCJleHAiOjE3NzUwNDUxOTIsImRhdGEiOnsidXNlciI6eyJpZCI6IjEifX19.zgfwpb6tau74qoihFl6Se6PGgIvkZbtbffGHpKFqcyE",

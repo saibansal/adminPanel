@@ -2,7 +2,7 @@
  * Sidebar Navigation Configuration
  *
  * Defines the structure and content of the sidebar navigation menu.
- * Supports multiple navigation component types from CoreUI React:
+ * Supports multiple navigation component types from Vismaad Inc React:
  * - CNavItem: Single navigation link
  * - CNavGroup: Collapsible group of links
  * - CNavTitle: Section title/divider
@@ -32,6 +32,7 @@ import {
   cilSettings,
   cilInfo,
   cilMediaPlay,
+  cilFolder,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -107,6 +108,12 @@ const _nav = [
     name: 'Attributes',
     to: '/products/attributes',
     icon: <CIcon icon={cilCalculator} customClassName="nav-icon" />,
+  },
+  {
+    component: CNavItem,
+    name: 'Categories',
+    to: '/products/categories',
+    icon: <CIcon icon={cilFolder} customClassName="nav-icon" />,
   },
   {
     component: CNavTitle,

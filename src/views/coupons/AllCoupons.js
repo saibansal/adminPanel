@@ -127,10 +127,10 @@ const AllCoupons = () => {
         <CCard className="mb-4 shadow-sm border-0">
           <CCardHeader className="bg-white border-bottom d-flex justify-content-between align-items-center py-3">
             <h5 className="mb-0 fw-bold text-dark">
-               WooCommerce Coupons
-               <CButton variant="ghost" size="sm" className="ms-2 p-0 text-muted" onClick={fetchCoupons}>
-                  <CIcon icon={cilReload} size="sm" />
-               </CButton>
+              Discount Coupons
+              <CButton variant="ghost" size="sm" className="ms-2 p-0 text-muted" onClick={fetchCoupons}>
+                <CIcon icon={cilReload} size="sm" />
+              </CButton>
             </h5>
             <CButton color="primary" size="sm" onClick={() => navigate('/coupons/add')}>
               <CIcon icon={cilPlus} className="me-1" /> Add Coupon
@@ -162,8 +162,8 @@ const AllCoupons = () => {
                         {['percent', 'percentage'].includes(coupon.discount_type) ? `${coupon.amount}%` : `$${coupon.amount}`}
                       </CTableDataCell>
                       <CTableDataCell>
-                         <CBadge color="light" className="text-dark border me-1">{coupon.usage_count}</CBadge>
-                         <span className="text-muted">/ {coupon.usage_limit || 'Unlimited'}</span>
+                        <CBadge color="light" className="text-dark border me-1">{coupon.usage_count}</CBadge>
+                        <span className="text-muted">/ {coupon.usage_limit || 'Unlimited'}</span>
                       </CTableDataCell>
                       <CTableDataCell>
                         {coupon.date_expires ? (
@@ -205,7 +205,7 @@ const AllCoupons = () => {
                   ))}
                   {coupons.length === 0 && !loading && (
                     <CTableRow>
-                        <CTableDataCell colSpan={6} className="text-center py-5 text-muted">No active coupons found in store.</CTableDataCell>
+                      <CTableDataCell colSpan={6} className="text-center py-5 text-muted">No active coupons found in store.</CTableDataCell>
                     </CTableRow>
                   )}
                 </CTableBody>

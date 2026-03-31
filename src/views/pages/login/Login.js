@@ -53,7 +53,7 @@ const Login = () => {
           name: data.user_nicename,
           displayName: data.user_display_name,
         }))
-        
+
         // Navigate to All Products list
         navigate('/products/all')
       } else {
@@ -77,16 +77,16 @@ const Login = () => {
                   <CForm onSubmit={handleLogin}>
                     <h1>Login</h1>
                     <p className="text-body-secondary">Sign In to your account</p>
-                    
+
                     {error && <CAlert color="danger">{error}</CAlert>}
-                    
+
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
-                      <CFormInput 
-                        placeholder="Username" 
-                        autoComplete="username" 
+                      <CFormInput
+                        placeholder="Username"
+                        autoComplete="username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         required

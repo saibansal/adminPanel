@@ -1,6 +1,6 @@
 const fetchCategories = async () => {
     try {
-        const response = await fetch('https://dev.vismaad.com/estore/frontend/wp-json/wp/v2/categories');
+        const response = await fetch('http://localhost/wordpress/wordpress-backend/frontend/wp-json/wp/v2/categories');
         if (!response.ok) {
             throw new Error('Could not fetch categories: ' + response.statusText);
         }
@@ -12,7 +12,7 @@ const fetchCategories = async () => {
         console.log('--- End of Categories ---');
     } catch (error) {
         console.error('Error fetching categories:', error.message);
-        console.log('Check if your WordPress server is running at https://dev.vismaad.com/estore/frontend/');
+        console.log('Check if your WordPress server is running at http://localhost/wordpress/wordpress-backend/frontend/');
     }
 };
 

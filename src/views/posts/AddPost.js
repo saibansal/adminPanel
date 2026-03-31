@@ -59,7 +59,7 @@ const AddPost = () => {
           'Content-Type': 'application/json',
           'Authorization': API_CONFIG.getJWTHeader()
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           name: newCatName,
           parent: parseInt(parentCat)
         })
@@ -193,12 +193,12 @@ const AddPost = () => {
       .filter(cat => cat.parent === parentId)
       .map(cat => (
         <React.Fragment key={cat.id}>
-          <CFormCheck 
-            label={cat.name} 
+          <CFormCheck
+            label={cat.name}
             checked={postData.categories.includes(cat.id)}
             onChange={(e) => {
-              const newCats = e.target.checked 
-                ? [...postData.categories, cat.id] 
+              const newCats = e.target.checked
+                ? [...postData.categories, cat.id]
                 : postData.categories.filter(id => id !== cat.id)
               setPostData({ ...postData, categories: newCats })
             }}
@@ -250,20 +250,20 @@ const AddPost = () => {
               </CFormSelect>
             </div>
             <div className="mb-3">
-               <CFormLabel className="small fw-bold">Featured Image</CFormLabel>
-               <div 
-                  className="bg-light border rounded text-center p-2 cursor-pointer position-relative" 
-                  style={{ minHeight: '120px' }}
-                  onClick={() => document.getElementById('post-img-input').click()}
-               >
-                  {postData.featured_media_url ? (
-                    <img src={postData.featured_media_url} className="img-fluid rounded" alt="Featured" />
-                  ) : (
-                    <div className="py-4 text-muted"><CIcon icon={cilImage} size="xl" className="opacity-25" /><br/>Set featured image</div>
-                  )}
-                  {uploading && <div className="position-absolute top-50 start-50 translate-middle"><CSpinner size="sm"/></div>}
-                  <input type="file" id="post-img-input" hidden onChange={handleImageUpload} accept="image/*" />
-               </div>
+              <CFormLabel className="small fw-bold">Featured Image</CFormLabel>
+              <div
+                className="bg-light border rounded text-center p-2 cursor-pointer position-relative"
+                style={{ minHeight: '120px' }}
+                onClick={() => document.getElementById('post-img-input').click()}
+              >
+                {postData.featured_media_url ? (
+                  <img src={postData.featured_media_url} className="img-fluid rounded" alt="Featured" />
+                ) : (
+                  <div className="py-4 text-muted"><CIcon icon={cilImage} size="xl" className="opacity-25" /><br />Set featured image</div>
+                )}
+                {uploading && <div className="position-absolute top-50 start-50 translate-middle"><CSpinner size="sm" /></div>}
+                <input type="file" id="post-img-input" hidden onChange={handleImageUpload} accept="image/*" />
+              </div>
             </div>
             <div className="mb-3">
               <CFormLabel className="small fw-bold">Categories</CFormLabel>
@@ -277,16 +277,16 @@ const AddPost = () => {
               <div className="mt-2 text-start">
                 {showAddCat ? (
                   <div className="p-2 border rounded bg-white shadow-sm">
-                    <CFormInput 
-                      placeholder="Category name" 
-                      size="sm" 
-                      className="mb-2" 
+                    <CFormInput
+                      placeholder="Category name"
+                      size="sm"
+                      className="mb-2"
                       value={newCatName}
                       onChange={(e) => setNewCatName(e.target.value)}
                     />
-                    <CFormSelect 
-                      size="sm" 
-                      className="mb-2" 
+                    <CFormSelect
+                      size="sm"
+                      className="mb-2"
                       value={parentCat}
                       onChange={(e) => setParentCat(e.target.value)}
                     >
@@ -296,17 +296,17 @@ const AddPost = () => {
                       ))}
                     </CFormSelect>
                     <div className="d-flex justify-content-between">
-                      <CButton 
-                        color="secondary" 
-                        variant="ghost" 
-                        size="sm" 
+                      <CButton
+                        color="secondary"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => setShowAddCat(false)}
                       >
                         Cancel
                       </CButton>
-                      <CButton 
-                        color="primary" 
-                        size="sm" 
+                      <CButton
+                        color="primary"
+                        size="sm"
                         onClick={handleAddCategory}
                         disabled={!newCatName || addingCat}
                       >
@@ -315,10 +315,10 @@ const AddPost = () => {
                     </div>
                   </div>
                 ) : (
-                  <CButton 
-                    color="link" 
-                    size="sm" 
-                    className="p-0 text-decoration-none" 
+                  <CButton
+                    color="link"
+                    size="sm"
+                    className="p-0 text-decoration-none"
                     onClick={() => setShowAddCat(true)}
                   >
                     + Add New Category

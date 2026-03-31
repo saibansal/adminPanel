@@ -29,7 +29,7 @@ import {
   CModalFooter,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilSave, cilImage, cilTrash, cilCloudUpload } from '@coreui/icons'
+import { cilPlus, cilSave, cilImage, cilTrash, cilCloudUpload, cilReload } from '@coreui/icons'
 import API_CONFIG from 'src/apiConfig'
 
 const AddProduct = () => {
@@ -100,25 +100,42 @@ const AddProduct = () => {
     images: []
   })
 
+  const fetchCategories = async () => {
+    try {
+      const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories?per_page=100&${authParams}`)
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data)
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err)
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
+      setInitialDataLoading(true)
       try {
-        const headers = { 'Authorization': API_CONFIG.getBasicAuthHeader() }
-        const [catRes, attrRes, taxRes, shipRes, prodRes] = await Promise.all([
-          fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories`, { headers }),
-          fetch(`${API_CONFIG.BASE_URL}wc/v3/products/attributes`, { headers }),
-          fetch(`${API_CONFIG.BASE_URL}wc/v3/taxes/classes`, { headers }),
-          fetch(`${API_CONFIG.BASE_URL}wc/v3/products/shipping_classes`, { headers }),
-          fetch(`${API_CONFIG.BASE_URL}wc/v3/products`, { headers })
+        const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+
+        // Fetch categories separately for reuse
+        fetchCategories()
+
+        const [attrRes, taxRes, shipRes, prodRes] = await Promise.all([
+          fetch(`${API_CONFIG.BASE_URL}wc/v3/products/attributes?${authParams}`),
+          fetch(`${API_CONFIG.BASE_URL}wc/v3/taxes/classes?${authParams}`),
+          fetch(`${API_CONFIG.BASE_URL}wc/v3/products/shipping_classes?${authParams}`),
+          fetch(`${API_CONFIG.BASE_URL}wc/v3/products?per_page=50&${authParams}`)
         ])
 
-        if (catRes.ok) setCategories(await catRes.json())
         if (attrRes.ok) setGlobalAttributes(await attrRes.json())
         if (taxRes.ok) setTaxClasses(await taxRes.json())
         if (shipRes.ok) setShippingClasses(await shipRes.json())
         if (prodRes.ok) setAllProducts(await prodRes.json())
       } catch (err) {
         console.error('Error fetching initial data:', err)
+        setError('Failed to connect to WooCommerce. Please check your connection.')
       } finally {
         setInitialDataLoading(false)
       }
@@ -133,8 +150,8 @@ const AddProduct = () => {
     const fetchProduct = async () => {
       setInitialDataLoading(true)
       try {
-        const headers = { 'Authorization': API_CONFIG.getBasicAuthHeader() }
-        const res = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}`, { headers })
+        const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+        const res = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}?${authParams}`)
         if (res.ok) {
           const data = await res.json()
 
@@ -151,7 +168,7 @@ const AddProduct = () => {
 
           // If variable product, fetch variations
           if (data.type === 'variable') {
-            const varRes = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}/variations?per_page=100`, { headers })
+            const varRes = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}/variations?per_page=100&${authParams}`)
             if (varRes.ok) {
               const varData = await varRes.json()
               setVariations(varData.map(v => ({
@@ -298,6 +315,8 @@ const AddProduct = () => {
   const handleAddNewCategory = async () => {
     if (!newCatName.trim()) return;
     setAddingCat(true);
+    setSuccess(null);
+    setError(null);
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories`, {
         method: 'POST',
@@ -305,19 +324,31 @@ const AddProduct = () => {
           'Content-Type': 'application/json',
           'Authorization': API_CONFIG.getBasicAuthHeader()
         },
-        body: JSON.stringify({ name: newCatName.trim() })
+        body: JSON.stringify({
+          name: newCatName.trim(),
+          parent: 0,
+          description: ''
+        })
       });
+
+      const data = await response.json();
+
       if (response.ok) {
-        const newCat = await response.json();
-        setCategories(prev => [...prev, newCat]);
+        setCategories(prev => [...prev, data]);
+        // Also select it for the current product
         setProductData(prev => ({
           ...prev,
-          categories: [...prev.categories, { id: newCat.id }]
+          categories: [...prev.categories, { id: data.id }]
         }));
         setNewCatName('');
+        showStatus('Category Added', `"${data.name}" has been created and selected.`, 'success');
+      } else {
+        throw new Error(data.message || 'Server error while creating category.');
       }
     } catch (err) {
       console.error('Error adding category:', err);
+      setError('Could not create category: ' + err.message);
+      showStatus('Error', err.message, 'danger');
     } finally {
       setAddingCat(false);
     }
@@ -366,9 +397,8 @@ const AddProduct = () => {
     // Fetch terms for this attribute (optional but helpful)
     let fetchedTerms = [];
     try {
-      const resp = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/attributes/${attr.id}/terms`, {
-        headers: { 'Authorization': API_CONFIG.getBasicAuthHeader() }
-      });
+      const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+      const resp = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/attributes/${attr.id}/terms?${authParams}`);
       if (resp.ok) fetchedTerms = await resp.json();
     } catch (e) {
       console.error('Error fetching terms:', e);
@@ -588,9 +618,10 @@ const AddProduct = () => {
         return varCopy;
       });
 
+      const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
       const apiUrl = isEditMode
-        ? `${API_CONFIG.BASE_URL}wc/v3/products/${id}`
-        : `${API_CONFIG.BASE_URL}wc/v3/products`;
+        ? `${API_CONFIG.BASE_URL}wc/v3/products/${id}?${authParams}`
+        : `${API_CONFIG.BASE_URL}wc/v3/products?${authParams}`;
 
       const response = await fetch(apiUrl, {
         method: isEditMode ? 'PUT' : 'POST',
@@ -618,9 +649,10 @@ const AddProduct = () => {
           // Delete temp fields
           delete varData.id;
 
+          const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
           const varActionUrl = varId
-            ? `${API_CONFIG.BASE_URL}wc/v3/products/${parentId}/variations/${varId}`
-            : `${API_CONFIG.BASE_URL}wc/v3/products/${parentId}/variations`;
+            ? `${API_CONFIG.BASE_URL}wc/v3/products/${parentId}/variations/${varId}?${authParams}`
+            : `${API_CONFIG.BASE_URL}wc/v3/products/${parentId}/variations?${authParams}`;
 
           await fetch(varActionUrl, {
             method: varId ? 'PUT' : 'POST',
@@ -632,7 +664,7 @@ const AddProduct = () => {
           });
         }
       }
-      
+
       showStatus('Success', `Product successfully ${isEditMode ? 'updated' : 'published'}!`, 'success')
       if (!isEditMode) {
         // Reset form for new product
@@ -1407,22 +1439,40 @@ const AddProduct = () => {
         </CCard>
 
         <CCard className="mb-4 shadow-sm border-0 text-start">
-          <CCardHeader className="bg-white py-3 fw-bold border-bottom">Product Categories</CCardHeader>
+          <CCardHeader className="bg-white py-2 fw-bold border-bottom d-flex justify-content-between align-items-center">
+            <span>Product Categories</span>
+            <CButton variant="ghost" size="sm" onClick={fetchCategories} disabled={loading} title="Sync Categories">
+              <CIcon icon={cilReload} size="sm" />
+            </CButton>
+          </CCardHeader>
           <CCardBody className="px-0 py-2">
-            <div className="px-3 mb-2" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+            <div className="px-3 mb-2" style={{ maxHeight: '250px', overflowY: 'auto' }}>
               {categories.length === 0 ? (
-                <div className="text-muted small px-2">No categories found.</div>
+                <div className="text-muted small px-2 py-3 text-center">
+                  <CSpinner size="sm" className="me-2" /> Loading categories...
+                </div>
               ) : (
-                categories.map(cat => (
-                  <CFormCheck
-                    key={cat.id}
-                    id={`cat-${cat.id}`}
-                    label={cat.name}
-                    className="mb-1"
-                    onChange={() => handleCategoryToggle(cat.id)}
-                    checked={productData.categories.some(c => c.id === cat.id)}
-                  />
-                ))
+                <div className="category-checklist">
+                  {(() => {
+                    const renderCategoryHierarchy = (parentId = 0, level = 0) => {
+                      return categories
+                        .filter(cat => cat.parent === parentId)
+                        .map(cat => (
+                          <div key={cat.id} style={{ marginLeft: `${level * 15}px` }}>
+                            <CFormCheck
+                              id={`cat-${cat.id}`}
+                              label={cat.name}
+                              className="mb-1 small"
+                              onChange={() => handleCategoryToggle(cat.id)}
+                              checked={productData.categories.some(c => c.id === cat.id)}
+                            />
+                            {renderCategoryHierarchy(cat.id, level + 1)}
+                          </div>
+                        ))
+                    }
+                    return renderCategoryHierarchy(0)
+                  })()}
+                </div>
               )}
             </div>
             <hr className="opacity-10 my-0" />

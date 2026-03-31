@@ -111,7 +111,7 @@ const AddCoupon = () => {
 
     try {
       const submissionData = { ...couponData }
-      
+
       // 1. Sanitize Discount Type (WC expects 'percent' not 'percentage')
       if (submissionData.discount_type === 'percentage') {
         submissionData.discount_type = 'percent'

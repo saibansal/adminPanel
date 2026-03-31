@@ -53,7 +53,7 @@ import { AppHeaderDropdown } from './header/index'
  *
  * Manages header UI including:
  * - Redux integration for sidebar state
- * - Theme management with CoreUI useColorModes hook
+ * - Theme management with Vismaad Inc useColorModes hook
  * - Scroll-based shadow effect
  * - Responsive navigation
  *
@@ -61,7 +61,7 @@ import { AppHeaderDropdown } from './header/index'
  */
 const AppHeader = () => {
   const headerRef = useRef()
-  const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+  const { colorMode, setColorMode } = useColorModes('Vismaad Inc-free-react-admin-template-theme')
 
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)

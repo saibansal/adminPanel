@@ -60,14 +60,14 @@ const Checkout = () => {
             <h6 className="mb-4 text-secondary">SELECT PAYMENT METHOD</h6>
             <CListGroup flush className="border rounded">
               {gateways.stripe && (
-                <CListGroupItem 
+                <CListGroupItem
                   className={`p-3 cursor-pointer ${selectedGateway === 'stripe' ? 'bg-light' : ''}`}
                   onClick={() => setSelectedGateway('stripe')}
                 >
-                  <CFormCheck 
-                    type="radio" 
-                    name="paymentMethod" 
-                    id="stripe" 
+                  <CFormCheck
+                    type="radio"
+                    name="paymentMethod"
+                    id="stripe"
                     label={
                       <div className="ms-2">
                         <div className="fw-bold">Credit Card (Stripe)</div>
@@ -81,14 +81,14 @@ const Checkout = () => {
               )}
 
               {gateways.paypal && (
-                <CListGroupItem 
+                <CListGroupItem
                   className={`p-3 cursor-pointer ${selectedGateway === 'paypal' ? 'bg-light' : ''}`}
                   onClick={() => setSelectedGateway('paypal')}
                 >
-                  <CFormCheck 
-                    type="radio" 
-                    name="paymentMethod" 
-                    id="paypal" 
+                  <CFormCheck
+                    type="radio"
+                    name="paymentMethod"
+                    id="paypal"
                     label={
                       <div className="ms-2">
                         <div className="fw-bold">PayPal</div>
@@ -102,14 +102,14 @@ const Checkout = () => {
               )}
 
               {gateways.bank && (
-                <CListGroupItem 
+                <CListGroupItem
                   className={`p-3 cursor-pointer ${selectedGateway === 'bank' ? 'bg-light' : ''}`}
                   onClick={() => setSelectedGateway('bank')}
                 >
-                  <CFormCheck 
-                    type="radio" 
-                    name="paymentMethod" 
-                    id="bank" 
+                  <CFormCheck
+                    type="radio"
+                    name="paymentMethod"
+                    id="bank"
                     label={
                       <div className="ms-2">
                         <div className="fw-bold">Direct Bank Transfer</div>
@@ -123,20 +123,20 @@ const Checkout = () => {
               )}
 
               {gateways.cod && (
-                <CListGroupItem 
+                <CListGroupItem
                   className={`p-3 cursor-pointer ${selectedGateway === 'cod' ? 'bg-light' : ''}`}
                   onClick={() => setSelectedGateway('cod')}
                 >
-                  <CFormCheck 
-                    type="radio" 
-                    name="paymentMethod" 
-                    id="cod" 
+                  <CFormCheck
+                    type="radio"
+                    name="paymentMethod"
+                    id="cod"
                     label={
                       <div className="ms-2">
                         <div className="fw-bold">Cash on delivery</div>
                         <div className="small text-muted">Pay with cash upon delivery.</div>
                       </div>
-                     }
+                    }
                     checked={selectedGateway === 'cod'}
                     onChange={() => setSelectedGateway('cod')}
                   />
@@ -144,20 +144,20 @@ const Checkout = () => {
               )}
 
               {!gateways.stripe && !gateways.paypal && !gateways.bank && !gateways.cod && (
-                 <CListGroupItem className="p-4 text-center text-muted">
-                    No payment methods are currently enabled by the administrator.
-                 </CListGroupItem>
+                <CListGroupItem className="p-4 text-center text-muted">
+                  No payment methods are currently enabled by the administrator.
+                </CListGroupItem>
               )}
             </CListGroup>
 
             <div className="mt-4 px-3">
-               <CFormCheck id="order-note" label="Add a note to your order" />
+              <CFormCheck id="order-note" label="Add a note to your order" />
             </div>
           </CCardBody>
           <CCardFooter className="bg-white border-0 text-end p-4">
-            <CButton 
-              color="primary" 
-              size="lg" 
+            <CButton
+              color="primary"
+              size="lg"
               className="px-5 shadow-sm"
               disabled={!gateways.stripe && !gateways.paypal && !gateways.bank}
               onClick={handlePlaceOrder}
@@ -171,20 +171,20 @@ const Checkout = () => {
       <CCol md={4}>
         <CCard className="shadow-sm border-0">
           <CCardBody>
-             <h6 className="fw-bold mb-3">Order Summary</h6>
-             <div className="d-flex justify-content-between mb-2">
-                <span>Subtotal</span>
-                <span className="fw-bold">$120.00</span>
-             </div>
-             <div className="d-flex justify-content-between mb-2">
-                <span>Shipping</span>
-                <span className="text-success">Free</span>
-             </div>
-             <hr />
-             <div className="d-flex justify-content-between mb-0 fs-5 fw-bold text-primary">
-                <span>Total</span>
-                <span>$120.00</span>
-             </div>
+            <h6 className="fw-bold mb-3">Order Summary</h6>
+            <div className="d-flex justify-content-between mb-2">
+              <span>Subtotal</span>
+              <span className="fw-bold">$120.00</span>
+            </div>
+            <div className="d-flex justify-content-between mb-2">
+              <span>Shipping</span>
+              <span className="text-success">Free</span>
+            </div>
+            <hr />
+            <div className="d-flex justify-content-between mb-0 fs-5 fw-bold text-primary">
+              <span>Total</span>
+              <span>$120.00</span>
+            </div>
           </CCardBody>
         </CCard>
       </CCol>

@@ -17,7 +17,7 @@ export const getIconsView = (iconset) => {
   ))
 }
 
-const CoreUIIcons = () => {
+const Vismaad IncIcons = () => {
   return (
     <>
       <DocsIcons />
@@ -31,4 +31,4 @@ const CoreUIIcons = () => {
   )
 }
 
-export default CoreUIIcons
+export default Vismaad IncIcons

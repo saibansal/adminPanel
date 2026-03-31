@@ -1,6 +1,6 @@
-# CoreUI Free React Admin Template - Development Guide
+# Vismaad Inc Free React Admin Template - Development Guide
 
-A comprehensive guide for developers working with the CoreUI Free React Admin Template. This guide covers setup, development workflows, common patterns, and best practices.
+A comprehensive guide for developers working with the Vismaad Inc Free React Admin Template. This guide covers setup, development workflows, common patterns, and best practices.
 
 ## Table of Contents
 
@@ -54,8 +54,8 @@ A comprehensive guide for developers working with the CoreUI Free React Admin Te
 
 1. **Clone the repository** (or download the source):
 ```bash
-git clone https://github.com/coreui/coreui-free-react-admin-template.git
-cd coreui-free-react-admin-template
+git clone https://github.com/Vismaad Inc/Vismaad Inc-free-react-admin-template.git
+cd Vismaad Inc-free-react-admin-template
 ```
 
 2. **Install dependencies**:
@@ -564,9 +564,9 @@ const Counter = () => {
 
 ## Styling Components
 
-### Using CoreUI Components
+### Using Vismaad Inc Components
 
-**ALWAYS use CoreUI React components** from `@coreui/react`:
+**ALWAYS use Vismaad Inc React components** from `@coreui/react`:
 
 ```javascript
 import {
@@ -641,7 +641,7 @@ const MyComponent = () => (
 
 ### CSS Custom Properties
 
-Use CoreUI CSS variables for theming:
+Use Vismaad Inc CSS variables for theming:
 
 ```javascript
 <div style={{
@@ -824,7 +824,7 @@ const handleSubmit = (e) => {
 
 ## Data Visualization
 
-### Using Chart.js with CoreUI
+### Using Chart.js with Vismaad Inc
 
 ```javascript
 import React from 'react'
@@ -867,7 +867,7 @@ const Dashboard = () => {
 
 ### Chart Types
 
-CoreUI provides React wrappers for Chart.js:
+Vismaad Inc provides React wrappers for Chart.js:
 
 - `CChartLine` - Line charts
 - `CChartBar` - Bar charts
@@ -1189,6 +1189,6 @@ docs/deployment-guide
 
 ---
 
-This guide covers the essential workflows and patterns for developing with the CoreUI Free React Admin Template. For additional questions, consult the [CoreUI React Documentation](https://coreui.io/react/docs/) or the [React Documentation](https://react.dev/).
+This guide covers the essential workflows and patterns for developing with the Vismaad Inc Free React Admin Template. For additional questions, consult the [Vismaad Inc React Documentation](https://Vismaad Inc.io/react/docs/) or the [React Documentation](https://react.dev/).
 
 Happy coding! 🚀

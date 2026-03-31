@@ -88,10 +88,10 @@ const AddUser = () => {
       }
 
       if (!isEditMode) {
-          payload.username = userData.username
-          payload.password = userData.password
+        payload.username = userData.username
+        payload.password = userData.password
       } else if (userData.password) {
-          payload.password = userData.password
+        payload.password = userData.password
       }
 
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/users${isEditMode ? `/${id}` : ''}`, {
@@ -129,13 +129,13 @@ const AddUser = () => {
           <CCardBody className="p-4">
             {error && <CAlert color="danger" dismissible>{error}</CAlert>}
             {success && <CAlert color="success" dismissible>{success}</CAlert>}
-            
+
             <CForm onSubmit={handleSubmit}>
               <div className="mb-3">
                 <CFormLabel>Username (required)</CFormLabel>
                 <CInputGroup>
                   <CInputGroupText><CIcon icon={cilUser} /></CInputGroupText>
-                  <CFormInput 
+                  <CFormInput
                     value={userData.username}
                     onChange={(e) => setUserData({ ...userData, username: e.target.value })}
                     disabled={isEditMode}
@@ -149,7 +149,7 @@ const AddUser = () => {
                 <CFormLabel>Email (required)</CFormLabel>
                 <CInputGroup>
                   <CInputGroupText><CIcon icon={cilEnvelopeOpen} /></CInputGroupText>
-                  <CFormInput 
+                  <CFormInput
                     type="email"
                     value={userData.email}
                     onChange={(e) => setUserData({ ...userData, email: e.target.value })}
@@ -161,14 +161,14 @@ const AddUser = () => {
               <CRow className="mb-3">
                 <CCol md={6}>
                   <CFormLabel>First Name</CFormLabel>
-                  <CFormInput 
+                  <CFormInput
                     value={userData.first_name}
                     onChange={(e) => setUserData({ ...userData, first_name: e.target.value })}
                   />
                 </CCol>
                 <CCol md={6}>
                   <CFormLabel>Last Name</CFormLabel>
-                  <CFormInput 
+                  <CFormInput
                     value={userData.last_name}
                     onChange={(e) => setUserData({ ...userData, last_name: e.target.value })}
                   />
@@ -177,7 +177,7 @@ const AddUser = () => {
 
               <div className="mb-3">
                 <CFormLabel>Display Name</CFormLabel>
-                <CFormInput 
+                <CFormInput
                   value={userData.name}
                   onChange={(e) => setUserData({ ...userData, name: e.target.value })}
                   required
@@ -199,7 +199,7 @@ const AddUser = () => {
                 <CFormLabel>{isEditMode ? 'New Password' : 'Password'}</CFormLabel>
                 <CInputGroup>
                   <CInputGroupText><CIcon icon={cilLockLocked} /></CInputGroupText>
-                  <CFormInput 
+                  <CFormInput
                     type="text" // Use text or a password field with toggle
                     placeholder={isEditMode ? 'Leave empty to keep current password' : 'Enter password'}
                     value={userData.password}

@@ -195,14 +195,14 @@ const Dropdowns = () => {
             <DocsExample href="components/dropdown#dark-dropdowns">
               <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
                 <div className="container-fluid">
-                  <a className="navbar-brand" href="https://coreui.io/react/">
+                  <a className="navbar-brand" href="https://Vismaad Inc.io/react/">
                     Navbar
                   </a>
                   <button
                     className="navbar-toggler"
                     type="button"
-                    data-coreui-toggle="collapse"
-                    data-coreui-target="#navbarNavDarkDropdown"
+                    data-Vismaad Inc-toggle="collapse"
+                    data-Vismaad Inc-target="#navbarNavDarkDropdown"
                     aria-controls="navbarNavDarkDropdown"
                     aria-expanded="false"
                     aria-label="Toggle navigation"

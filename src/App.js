@@ -71,7 +71,7 @@ const PublicRoute = ({ children }) => {
 }
 
 const App = () => {
-  const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+  const { isColorModeSet, setColorMode } = useColorModes('Vismaad Inc-free-react-admin-template-theme')
   const storedTheme = useSelector((state) => state.theme)
 
   useEffect(() => {

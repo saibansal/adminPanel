@@ -124,8 +124,8 @@ const Profile = () => {
             <p className="text-muted small">Administrator</p>
             <hr />
             <div className="text-start small mt-4">
-               <div className="mb-2"><strong>Username:</strong> {user.name}</div>
-               <div className="mb-2"><strong>Email:</strong> {user.email}</div>
+              <div className="mb-2"><strong>Username:</strong> {user.name}</div>
+              <div className="mb-2"><strong>Email:</strong> {user.email}</div>
             </div>
           </CCardBody>
         </CCard>
@@ -140,30 +140,30 @@ const Profile = () => {
           <CCardBody className="p-4">
             {success && <CAlert color="success">{success}</CAlert>}
             {error && <CAlert color="danger">{error}</CAlert>}
-            
+
             <CForm onSubmit={handleUpdate}>
               <CRow className="mb-3">
                 <CCol md={6}>
                   <CFormLabel>First Name</CFormLabel>
-                  <CFormInput 
+                  <CFormInput
                     value={user.firstName}
-                    onChange={(e) => setUser({...user, firstName: e.target.value})}
+                    onChange={(e) => setUser({ ...user, firstName: e.target.value })}
                   />
                 </CCol>
                 <CCol md={6}>
                   <CFormLabel>Last Name</CFormLabel>
-                  <CFormInput 
+                  <CFormInput
                     value={user.lastName}
-                    onChange={(e) => setUser({...user, lastName: e.target.value})}
+                    onChange={(e) => setUser({ ...user, lastName: e.target.value })}
                   />
                 </CCol>
               </CRow>
 
               <div className="mb-3">
                 <CFormLabel>Display Name</CFormLabel>
-                <CFormInput 
+                <CFormInput
                   value={user.displayName}
-                  onChange={(e) => setUser({...user, displayName: e.target.value})}
+                  onChange={(e) => setUser({ ...user, displayName: e.target.value })}
                   required
                 />
                 <div className="form-text small">This is how your name will appear in the dashboard.</div>
@@ -171,11 +171,11 @@ const Profile = () => {
 
               <div className="mb-4">
                 <CFormLabel>Biographical Info</CFormLabel>
-                <CFormInput 
+                <CFormInput
                   as="textarea"
                   rows={4}
                   value={user.description}
-                  onChange={(e) => setUser({...user, description: e.target.value})}
+                  onChange={(e) => setUser({ ...user, description: e.target.value })}
                 />
               </div>
 
@@ -188,13 +188,13 @@ const Profile = () => {
 
         <CCard className="mb-4 shadow-sm border-0 border-top border-warning border-3">
           <CCardHeader className="bg-white py-3 fw-bold">
-             <CIcon icon={cilShieldAlt} className="me-2" />
-             Security Setting
+            <CIcon icon={cilShieldAlt} className="me-2" />
+            Security Setting
           </CCardHeader>
           <CCardBody className="p-4">
             <p className="text-muted small">Passwords must be updated through the main WordPress website for security reasons.</p>
             <CButton color="warning" variant="outline" size="sm" href={`${API_CONFIG.BASE_URL.replace('/wp-json/', '')}/wp-admin/profile.php`} target="_blank">
-               Go to WordPress Profile Settings
+              Go to WordPress Profile Settings
             </CButton>
           </CCardBody>
         </CCard>

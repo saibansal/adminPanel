@@ -41,22 +41,22 @@ const AppHeaderDropdown = () => {
       </CDropdownToggle>
       <CDropdownMenu className="pt-0 shadow border-0" placement="bottom-end">
         <CDropdownHeader className="bg-light fw-semibold mb-2 py-2">Account</CDropdownHeader>
-        <CDropdownItem 
-          onClick={() => navigate('/profile')} 
+        <CDropdownItem
+          onClick={() => navigate('/profile')}
           style={{ cursor: 'pointer' }}
         >
           <CIcon icon={cilUser} className="me-2 text-primary" />
           My Profile
         </CDropdownItem>
-        <CDropdownItem 
-           onClick={() => navigate('/account')}
-           style={{ cursor: 'pointer' }}
+        <CDropdownItem
+          onClick={() => navigate('/account')}
+          style={{ cursor: 'pointer' }}
         >
           <CIcon icon={cilSettings} className="me-2 text-info" />
           Settings
         </CDropdownItem>
         <CDropdownDivider />
-        <CDropdownItem 
+        <CDropdownItem
           onClick={handleLogout}
           style={{ cursor: 'pointer' }}
           className="text-danger"

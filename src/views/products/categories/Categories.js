@@ -19,15 +19,37 @@ import {
   CFormTextarea,
   CSpinner,
   CAlert,
+  CModal,
+  CModalHeader,
+  CModalTitle,
+  CModalBody,
+  CModalFooter,
+  CBadge,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilTrash } from '@coreui/icons'
+import { cilPencil, cilTrash, cilReload, cilFolder, cilPlus } from '@coreui/icons'
 import API_CONFIG from 'src/apiConfig'
 
 const Categories = () => {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
+
+  // Feedback modals
+  const [editModal, setEditModal] = useState({ visible: false, category: null })
+  const [deleteConfirm, setDeleteConfirm] = useState({ visible: false, id: null })
+
+  // New Category State
+  const [newCat, setNewCat] = useState({
+    name: '',
+    slug: '',
+    parent: 0,
+    description: '',
+  })
+
+  const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
 
   useEffect(() => {
     fetchCategories()
@@ -36,159 +58,293 @@ const Categories = () => {
   const fetchCategories = async () => {
     setLoading(true)
     setError(null)
-    const { BASE_URL } = API_CONFIG;
-
     try {
-      // Trying WooCommerce API first with JWT Authentication
-      let response = await fetch(`${BASE_URL}wc/v3/products/categories`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getBasicAuthHeader()
-        }
-      })
-
-      let data;
-      const contentType = response.headers.get('content-type');
-
-      if (response.ok && contentType && contentType.includes('application/json')) {
-        data = await response.json()
-        console.log('Fetched Product Categories from WooCommerce:', data)
-        setCategories(data)
-      } else {
-        // Log the raw response for debugging
-        if (response.status === 401) {
-          console.error('Authentication Failed. Checking fallback or logging error...');
-        }
-
-        const text = await response.text();
-        console.warn('WooCommerce API response not OK or not JSON. Status:', response.status);
-
-        // Fallback to standard WP categories
-        response = await fetch(`${BASE_URL}wp/v2/categories`, {
-          headers: {
-            'Authorization': API_CONFIG.getJWTHeader()
-          }
-        })
-        const fallbackContentType = response.headers.get('content-type');
-
-        if (response.ok && fallbackContentType && fallbackContentType.includes('application/json')) {
-          data = await response.json()
-          console.log('Fetched Basic WordPress Categories:', data)
-          setCategories(data.map(cat => ({
-            id: cat.id,
-            name: cat.name,
-            description: cat.description,
-            slug: cat.slug,
-            count: cat.count || 0
-          })))
-        } else {
-          throw new Error('401 Unauthorized: Invalid or expired JWT token. Please ensure your token in apiConfig.js is correct.')
-        }
-      }
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories?per_page=100&${authParams}`)
+      if (!response.ok) throw new Error('Failed to synchronize with WooCommerce Categories')
+      const data = await response.json()
+      setCategories(data)
     } catch (err) {
-      console.error('Error fetching categories:', err)
-      setError(err.message || 'Could not connect to WordPress. Please check your API settings.')
-      // Fallback dummy data for development
-      setCategories([
-        { id: 1, name: 'Electronics', description: 'Gadgets and gizmos', slug: 'electronics', count: 45 },
-        { id: 2, name: 'Clothing', description: 'Fashion and apparel', slug: 'clothing', count: 22 },
-      ])
+      console.error('Fetch Categories error:', err)
+      setError(err.message)
     } finally {
       setLoading(false)
     }
   }
 
+  const handleAddCategory = async (e) => {
+    if (e) e.preventDefault()
+    if (!newCat.name) return
+    setSubmitting(true)
+    setError(null)
+
+    const submissionData = { ...newCat }
+    if (!submissionData.slug || submissionData.slug.trim() === '') {
+      delete submissionData.slug
+    }
+
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories?${authParams}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionData),
+      })
+
+      if (response.ok) {
+        setSuccess(`Category "${newCat.name}" added successfully!`)
+        setNewCat({ name: '', slug: '', parent: 0, description: '' })
+        fetchCategories()
+        setTimeout(() => setSuccess(null), 3000)
+      } else {
+        const errData = await response.json()
+        throw new Error(errData.message || 'Failed to create category')
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDeleteCategory = async () => {
+    const id = deleteConfirm.id
+    setSubmitting(true)
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories/${id}?force=true&${authParams}`, {
+        method: 'DELETE',
+      })
+      if (response.ok) {
+        setSuccess('Category permanently removed.')
+        setCategories(categories.filter((c) => c.id !== id))
+        setDeleteConfirm({ visible: false, id: null })
+        setTimeout(() => setSuccess(null), 3000)
+      }
+    } catch (err) {
+      setError('Delete operation failed.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleUpdateCategory = async () => {
+    const { id, name, description, slug, parent } = editModal.category
+    setSubmitting(true)
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories/${id}?${authParams}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description, slug, parent }),
+      })
+      if (response.ok) {
+        setSuccess(`Category "${name}" updated.`)
+        fetchCategories()
+        setEditModal({ visible: false, category: null })
+        setTimeout(() => setSuccess(null), 3000)
+      }
+    } catch (err) {
+      setError('Update failed.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  // Organize hierarchical structure for display
+  const renderCategoryRows = (parentId = 0, level = 0) => {
+    return categories
+      .filter((cat) => cat.parent === parentId)
+      .map((cat) => (
+        <React.Fragment key={cat.id}>
+          <CTableRow>
+            <CTableDataCell>
+              <div style={{ marginLeft: `${level * 20}px` }} className="d-flex align-items-center">
+                {level > 0 && <span className="text-muted opacity-50 me-2">—</span>}
+                <CIcon icon={cilFolder} className="text-warning me-2" size="sm" />
+                <span className="fw-bold">{cat.name}</span>
+              </div>
+            </CTableDataCell>
+            <CTableDataCell className="small text-muted text-truncate" style={{ maxWidth: '200px' }}>
+              {cat.description || 'No description'}
+            </CTableDataCell>
+            <CTableDataCell className="small font-monospace">{cat.slug}</CTableDataCell>
+            <CTableDataCell className="text-center">
+              <CBadge color="light" className="text-dark border">{cat.count}</CBadge>
+            </CTableDataCell>
+            <CTableDataCell className="text-center">
+              <div className="d-flex justify-content-center gap-1">
+                <CButton color="info" variant="ghost" size="sm" onClick={() => setEditModal({ visible: true, category: { ...cat } })}>
+                  <CIcon icon={cilPencil} />
+                </CButton>
+                <CButton color="danger" variant="ghost" size="sm" onClick={() => setDeleteConfirm({ visible: true, id: cat.id })}>
+                  <CIcon icon={cilTrash} />
+                </CButton>
+              </div>
+            </CTableDataCell>
+          </CTableRow>
+          {renderCategoryRows(cat.id, level + 1)}
+        </React.Fragment>
+      ))
+  }
+
   return (
     <CRow>
       <CCol md={4}>
-        <CCard className="mb-4">
-          <CCardHeader>
-            <strong>Add New Category</strong>
+        <CCard className="mb-4 shadow-sm border-0">
+          <CCardHeader className="bg-white py-3">
+            <div className="fw-bold">
+              <CIcon icon={cilPlus} className="me-2 text-primary" />
+              Add New Product Category
+            </div>
           </CCardHeader>
           <CCardBody>
-            <CForm className="g-3">
+            <CForm className="g-3" onSubmit={handleAddCategory}>
               <div className="mb-3">
-                <CFormLabel htmlFor="categoryName">Name</CFormLabel>
-                <CFormInput type="text" id="categoryName" placeholder="Enter category name" />
+                <CFormLabel htmlFor="categoryName" className="small fw-bold">Name</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="categoryName"
+                  placeholder="The name as it appears on your site"
+                  value={newCat.name}
+                  onChange={(e) => setNewCat({ ...newCat, name: e.target.value })}
+                  required
+                />
               </div>
               <div className="mb-3">
-                <CFormLabel htmlFor="categorySlug">Slug</CFormLabel>
-                <CFormInput type="text" id="categorySlug" placeholder="Enter category slug" />
+                <CFormLabel htmlFor="categorySlug" className="small fw-bold">Slug (Optional)</CFormLabel>
+                <CFormInput
+                  type="text"
+                  id="categorySlug"
+                  placeholder="URL-friendly version of the name"
+                  value={newCat.slug}
+                  onChange={(e) => setNewCat({ ...newCat, slug: e.target.value })}
+                />
               </div>
               <div className="mb-3">
-                <CFormLabel htmlFor="parentCategory">Parent Category</CFormLabel>
-                <CFormSelect id="parentCategory">
-                  <option value="none">None</option>
-                  {categories.map(cat => (
+                <CFormLabel htmlFor="parentCategory" className="small fw-bold">Parent Category</CFormLabel>
+                <CFormSelect
+                  id="parentCategory"
+                  value={newCat.parent}
+                  onChange={(e) => setNewCat({ ...newCat, parent: parseInt(e.target.value) })}
+                >
+                  <option value={0}>None</option>
+                  {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </CFormSelect>
               </div>
               <div className="mb-3">
-                <CFormLabel htmlFor="description">Description</CFormLabel>
-                <CFormTextarea id="description" rows="3"></CFormTextarea>
+                <CFormLabel htmlFor="description" className="small fw-bold">Description</CFormLabel>
+                <CFormTextarea
+                  id="description"
+                  rows="3"
+                  value={newCat.description}
+                  onChange={(e) => setNewCat({ ...newCat, description: e.target.value })}
+                ></CFormTextarea>
               </div>
-              <CButton color="primary" type="submit" size="sm">
-                Add New Category
+              <CButton color="primary" type="submit" size="sm" className="w-100" disabled={submitting}>
+                {submitting ? <CSpinner size="sm" /> : 'Create Category'}
               </CButton>
             </CForm>
           </CCardBody>
         </CCard>
       </CCol>
       <CCol md={8}>
-        <CCard className="mb-4">
-          <CCardHeader>
-            <div className="d-flex justify-content-between align-items-center">
-              <strong>Categories</strong>
-              <CButton color="outline-info" size="sm" onClick={fetchCategories} disabled={loading}>
-                {loading ? <CSpinner size="sm" /> : 'Refresh'}
-              </CButton>
+        {success && <CAlert color="success" className="shadow-sm border-0 mb-3">{success}</CAlert>}
+        {error && <CAlert color="danger" className="shadow-sm border-0 mb-3">{error}</CAlert>}
+        <CCard className="mb-4 shadow-sm border-0">
+          <CCardHeader className="bg-white py-3 d-flex justify-content-between align-items-center">
+            <div className="fw-bold">
+              <CIcon icon={cilFolder} className="me-2 text-primary" />
+              Category
             </div>
+            <CButton color="light" size="sm" onClick={fetchCategories} disabled={loading}>
+              {loading ? <CSpinner size="sm" /> : <CIcon icon={cilReload} />}
+            </CButton>
           </CCardHeader>
-          <CCardBody>
-            {error && <CAlert color="warning">{error}</CAlert>}
-
+          <CCardBody className="p-0">
             {loading && categories.length === 0 ? (
               <div className="text-center p-5">
                 <CSpinner color="primary" />
-                <p className="mt-2 text-muted">Fetching categories from WordPress...</p>
+                <p className="mt-2 text-muted">Synchronizing with WooCommerce Taxonomies...</p>
               </div>
             ) : (
-              <CTable align="middle" className="mb-0 border" hover responsive>
-                <CTableHead className="text-nowrap">
+              <CTable align="middle" className="mb-0 overflow-hidden" hover responsive>
+                <CTableHead color="light">
                   <CTableRow>
-                    <CTableHeaderCell className="bg-body-tertiary">Name</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary">Description</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary">Slug</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Count</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">Actions</CTableHeaderCell>
+                    <CTableHeaderCell className="border-0">Name</CTableHeaderCell>
+                    <CTableHeaderCell className="border-0">Description</CTableHeaderCell>
+                    <CTableHeaderCell className="border-0">Slug</CTableHeaderCell>
+                    <CTableHeaderCell className="border-0 text-center">Count</CTableHeaderCell>
+                    <CTableHeaderCell className="border-0 text-center">Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
-                <CTableBody>
-                  {categories.map((item, index) => (
-                    <CTableRow key={index}>
-                      <CTableDataCell>
-                        <div className="fw-bold text-info">{item.name}</div>
-                      </CTableDataCell>
-                      <CTableDataCell>{item.description}</CTableDataCell>
-                      <CTableDataCell>{item.slug}</CTableDataCell>
-                      <CTableDataCell className="text-center">{item.count}</CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        <CButton color="info" size="sm" className="me-2">
-                          <CIcon icon={cilPencil} />
-                        </CButton>
-                        <CButton color="danger" size="sm">
-                          <CIcon icon={cilTrash} />
-                        </CButton>
-                      </CTableDataCell>
-                    </CTableRow>
-                  ))}
-                </CTableBody>
+                <CTableBody>{renderCategoryRows()}</CTableBody>
               </CTable>
             )}
           </CCardBody>
         </CCard>
       </CCol>
+
+      {/* Edit Modal */}
+      <CModal visible={editModal.visible} onClose={() => setEditModal({ visible: false, category: null })}>
+        <CModalHeader><CModalTitle>Edit Category</CModalTitle></CModalHeader>
+        <CModalBody>
+          {editModal.category && (
+            <CForm className="row g-3">
+              <CCol md={12}>
+                <CFormLabel className="small fw-bold">Name</CFormLabel>
+                <CFormInput
+                  value={editModal.category.name}
+                  onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, name: e.target.value } })}
+                />
+              </CCol>
+              <CCol md={12}>
+                <CFormLabel className="small fw-bold">Slug</CFormLabel>
+                <CFormInput
+                  value={editModal.category.slug}
+                  onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, slug: e.target.value } })}
+                />
+              </CCol>
+              <CCol md={12}>
+                <CFormLabel className="small fw-bold">Parent</CFormLabel>
+                <CFormSelect
+                  value={editModal.category.parent}
+                  onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, parent: parseInt(e.target.value) } })}
+                >
+                  <option value={0}>None</option>
+                  {categories.filter(c => c.id !== editModal.category.id).map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </CFormSelect>
+              </CCol>
+              <CCol md={12}>
+                <CFormLabel className="small fw-bold">Description</CFormLabel>
+                <CFormTextarea
+                  rows="3"
+                  value={editModal.category.description}
+                  onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, description: e.target.value } })}
+                />
+              </CCol>
+            </CForm>
+          )}
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setEditModal({ visible: false, category: null })}>Cancel</CButton>
+          <CButton color="primary" onClick={handleUpdateCategory} disabled={submitting}>
+            {submitting ? <CSpinner size="sm" /> : 'Save Changes'}
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* Delete Confirmation */}
+      <CModal visible={deleteConfirm.visible} onClose={() => setDeleteConfirm({ visible: false, id: null })}>
+        <CModalHeader><CModalTitle className="text-danger">Permanently Delete Category?</CModalTitle></CModalHeader>
+        <CModalBody>This will remove the category from all assigned products. This action cannot be undone.</CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setDeleteConfirm({ visible: false, id: null })}>Cancel</CButton>
+          <CButton color="danger" className="text-white" onClick={handleDeleteCategory} disabled={submitting}>
+            {submitting ? <CSpinner size="sm" /> : 'Delete Category'}
+          </CButton>
+        </CModalFooter>
+      </CModal>
     </CRow>
   )
 }

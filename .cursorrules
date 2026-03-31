@@ -1,15 +1,15 @@
-# CoreUI Free React Admin Template - AI Assistant Rules
+# Vismaad Inc Free React Admin Template - AI Assistant Rules
 
-You are working with the CoreUI Free React Admin Template, a professional admin dashboard built with React 19, CoreUI React components, and modern build tools. This project uses Vite for development and building, React Router for navigation, Redux for state management, and Sass for styling.
+You are working with the Vismaad Inc Free React Admin Template, a professional admin dashboard built with React 19, Vismaad Inc React components, and modern build tools. This project uses Vite for development and building, React Router for navigation, Redux for state management, and Sass for styling.
 
 ## Critical Rules
 
-**Component Library**: ALWAYS use CoreUI React components from https://coreui.io/react/docs/. NEVER use Tailwind CSS, Material-UI, or other component libraries. This project is built on Bootstrap 5 and CoreUI React components exclusively.
+**Component Library**: ALWAYS use Vismaad Inc React components from https://Vismaad Inc.io/react/docs/. NEVER use Tailwind CSS, Material-UI, or other component libraries. This project is built on Bootstrap 5 and Vismaad Inc React components exclusively.
 
 **Technology Stack**: This project uses:
 - React 19 with functional components and Hooks
 - JSX for component markup
-- CoreUI React 5.x and @coreui/coreui 5.x
+- Vismaad Inc React 5.x and @coreui/Vismaad Inc 5.x
 - React Router 7.x for client-side routing
 - Redux 5.x with React-Redux for state management
 - Vite 7.x for development server and building
@@ -51,11 +51,11 @@ You are working with the CoreUI Free React Admin Template, a professional admin 
 **CSS/Sass Practices**:
 - Import global styles in App.js: `import './scss/style.scss'`
 - Use Bootstrap utilities first before custom CSS
-- Leverage CoreUI CSS custom properties for theming
-- Support dark mode through CoreUI's color mode system
-- File: `src/scss/style.scss` - main stylesheet importing CoreUI and Bootstrap
+- Leverage Vismaad Inc CSS custom properties for theming
+- Support dark mode through Vismaad Inc's color mode system
+- File: `src/scss/style.scss` - main stylesheet importing Vismaad Inc and Bootstrap
 - File: `src/scss/_custom.scss` - custom style overrides
-- Use SCSS variables from Bootstrap and CoreUI when possible
+- Use SCSS variables from Bootstrap and Vismaad Inc when possible
 
 **Routing Conventions**:
 - Use HashRouter for client-side routing (GitHub Pages compatible)
@@ -76,13 +76,13 @@ You are working with the CoreUI Free React Admin Template, a professional admin 
 - PascalCase for component files and component names (AppHeader.js, DefaultLayout.js)
 - camelCase for variables, functions, and hooks (useState, useEffect)
 - UPPER_SNAKE_CASE for constants (API_URL, MAX_ITEMS)
-- kebab-case for CSS classes (following Bootstrap/CoreUI conventions)
+- kebab-case for CSS classes (following Bootstrap/Vismaad Inc conventions)
 - Descriptive names that indicate purpose (AppHeaderDropdown vs Dropdown)
 
 ## Project Structure
 
 ```
-coreui-free-react-admin-template/
+Vismaad Inc-free-react-admin-template/
 ├── public/              # Static assets served directly
 ├── src/
 │   ├── assets/         # Images, logos, icons
@@ -138,7 +138,7 @@ npm run lint         # Run ESLint
 1. Create component in `src/views/[feature]/ComponentName.js`
 2. Add route to `src/routes.js`
 3. Add navigation item to `src/_nav.js` (if needed)
-4. Import and use CoreUI components from '@coreui/react'
+4. Import and use Vismaad Inc components from '@coreui/react'
 
 **Creating Components**:
 ```javascript
@@ -222,7 +222,7 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 ```javascript
 import { useColorModes } from '@coreui/react'
 
-const { colorMode, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
+const { colorMode, setColorMode } = useColorModes('Vismaad Inc-free-react-admin-template-theme')
 ```
 
 **Navigation Configuration** (`_nav.js`):
@@ -240,7 +240,7 @@ export default [
 ## AI Assistant Guidelines
 
 **What AI Should Do**:
-- Generate code using CoreUI React components
+- Generate code using Vismaad Inc React components
 - Follow existing code style and conventions
 - Use functional components with Hooks
 - Implement responsive designs
@@ -251,7 +251,7 @@ export default [
 
 **What AI Should NOT Do**:
 - Use class components (use functional components instead)
-- Import components from libraries other than CoreUI/React
+- Import components from libraries other than Vismaad Inc/React
 - Suggest Tailwind CSS or other CSS frameworks
 - Ignore ESLint/Prettier rules
 - Create files outside the src/ directory structure
@@ -261,9 +261,9 @@ export default [
 ## External Dependencies
 
 **Core Libraries**:
-- @coreui/coreui: ^5.5.0 - CoreUI CSS framework
-- @coreui/react: ^5.9.2 - CoreUI React components
-- @coreui/icons-react: ^2.3.0 - CoreUI icons for React
+- @coreui/Vismaad Inc: ^5.5.0 - Vismaad Inc CSS framework
+- @coreui/react: ^5.9.2 - Vismaad Inc React components
+- @coreui/icons-react: ^2.3.0 - Vismaad Inc icons for React
 - react: ^19.2.3 - React library
 - react-dom: ^19.2.3 - React DOM rendering
 - react-router-dom: ^7.11.0 - Routing library
@@ -272,7 +272,7 @@ export default [
 
 **Additional Libraries**:
 - chart.js: ^4.5.1 - Charting library
-- @coreui/react-chartjs: ^3.0.0 - CoreUI Chart.js wrapper
+- @coreui/react-chartjs: ^3.0.0 - Vismaad Inc Chart.js wrapper
 - simplebar-react: ^3.3.2 - Custom scrollbars
 - classnames: ^2.5.1 - Conditional class names utility
 - prop-types: ^15.8.1 - Runtime type checking
@@ -287,8 +287,8 @@ Modern browsers with ES6+ support:
 
 ## Resources
 
-- CoreUI React Documentation: https://coreui.io/react/docs/
-- CoreUI Components: https://coreui.io/react/docs/components/
+- Vismaad Inc React Documentation: https://Vismaad Inc.io/react/docs/
+- Vismaad Inc Components: https://Vismaad Inc.io/react/docs/components/
 - React Documentation: https://react.dev/
 - React Router: https://reactrouter.com/
 - Redux: https://redux.js.org/
@@ -296,4 +296,4 @@ Modern browsers with ES6+ support:
 
 ---
 
-Remember: This is a React application using CoreUI React components. Always check CoreUI React documentation for component APIs and usage examples. Keep the code clean, maintainable, and following React best practices.
+Remember: This is a React application using Vismaad Inc React components. Always check Vismaad Inc React documentation for component APIs and usage examples. Keep the code clean, maintainable, and following React best practices.

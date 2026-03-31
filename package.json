@@ -1,17 +1,17 @@
 {
-  "name": "@coreui/coreui-free-react-admin-template",
+  "name": "@coreui/Vismaad Inc-free-react-admin-template",
   "version": "5.5.0",
-  "description": "CoreUI Free React Admin Template",
+  "description": "Vismaad Inc Free React Admin Template",
   "homepage": ".",
   "bugs": {
-    "url": "https://github.com/coreui/coreui-free-react-admin-template/issues"
+    "url": "https://github.com/Vismaad Inc/Vismaad Inc-free-react-admin-template/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:coreui/coreui-free-react-admin-template.git"
+    "url": "git@github.com:Vismaad Inc/Vismaad Inc-free-react-admin-template.git"
   },
   "license": "MIT",
-  "author": "The CoreUI Team (https://github.com/orgs/coreui/people)",
+  "author": "The Vismaad Inc Team (https://github.com/orgs/Vismaad Inc/people)",
   "scripts": {
     "build": "vite build",
     "lint": "eslint",

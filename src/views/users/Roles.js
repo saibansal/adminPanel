@@ -37,7 +37,7 @@ const Roles = () => {
   const [newRole, setNewRole] = useState({ name: '', slug: '' })
   const [permissions, setPermissions] = useState({})
   const [loading, setLoading] = useState(false)
-  
+
   const sections = [
     { name: 'Products', key: 'prod' },
     { name: 'Posts', key: 'post' },
@@ -65,18 +65,18 @@ const Roles = () => {
   const handleCreateRole = async (e) => {
     e.preventDefault()
     setLoading(true)
-    
+
     setTimeout(() => {
-        if (isEditMode) {
-            setRoles(roles.map(r => r.slug === editingSlug ? { ...r, name: newRole.name, slug: newRole.slug } : r))
-        } else {
-            setRoles([...roles, { ...newRole, count: 0, permissions: ['Custom'] }])
-        }
-        setNewRole({ name: '', slug: '' })
-        setPermissions({})
-        setShowAddRole(false)
-        setIsEditMode(false)
-        setLoading(false)
+      if (isEditMode) {
+        setRoles(roles.map(r => r.slug === editingSlug ? { ...r, name: newRole.name, slug: newRole.slug } : r))
+      } else {
+        setRoles([...roles, { ...newRole, count: 0, permissions: ['Custom'] }])
+      }
+      setNewRole({ name: '', slug: '' })
+      setPermissions({})
+      setShowAddRole(false)
+      setIsEditMode(false)
+      setLoading(false)
     }, 800)
   }
 
@@ -104,11 +104,11 @@ const Roles = () => {
         <CCard className="mb-4 shadow-sm border-0">
           <CCardHeader className="bg-white py-3 fw-bold border-bottom d-flex justify-content-between">
             <div>
-               <CIcon icon={cilShieldAlt} className="me-2" />
-               WordPress User Roles
+              <CIcon icon={cilShieldAlt} className="me-2" />
+              WordPress User Roles
             </div>
             {!showAddRole && (
-              <CButton color="primary" size="sm" onClick={() => { setShowAddRole(true); setIsEditMode(false); setNewRole({name:'', slug:''}); handleSelectAll(false) }}>
+              <CButton color="primary" size="sm" onClick={() => { setShowAddRole(true); setIsEditMode(false); setNewRole({ name: '', slug: '' }); handleSelectAll(false) }}>
                 <CIcon icon={cilPlus} className="me-2" /> Add New Role
               </CButton>
             )}
@@ -134,18 +134,18 @@ const Roles = () => {
                     <CTableDataCell><code>{role.slug}</code></CTableDataCell>
                     <CTableDataCell className="text-center">{role.count}</CTableDataCell>
                     <CTableDataCell className="text-center">
-                      <CButton 
-                        color="info" 
-                        variant="ghost" 
-                        size="sm" 
+                      <CButton
+                        color="info"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleEdit(role)}
                       >
                         <CIcon icon={cilPencil} />
                       </CButton>
-                      <CButton 
-                        color="danger" 
-                        variant="ghost" 
-                        size="sm" 
+                      <CButton
+                        color="danger"
+                        variant="ghost"
+                        size="sm"
                         disabled={['administrator', 'subscriber'].includes(role.slug)}
                         onClick={() => handleDelete(role.slug)}
                       >
@@ -165,105 +165,105 @@ const Roles = () => {
           <CCard className="mb-4 shadow-sm border-0 border-top border-primary border-3">
             <CCardHeader className="bg-white py-3 fw-bold">{isEditMode ? 'Edit Role' : 'Create New Role'}</CCardHeader>
             <CCardBody className="p-4">
-               <CForm onSubmit={handleCreateRole}>
-                  <div className="mb-3">
-                    <CFormLabel>Display Name</CFormLabel>
-                    <CFormInput 
-                       placeholder="e.g. Sales Manager"
-                       value={newRole.name}
-                       onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
-                       required
+              <CForm onSubmit={handleCreateRole}>
+                <div className="mb-3">
+                  <CFormLabel>Display Name</CFormLabel>
+                  <CFormInput
+                    placeholder="e.g. Sales Manager"
+                    value={newRole.name}
+                    onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <CFormLabel>Role Slug</CFormLabel>
+                  <CFormInput
+                    placeholder="e.g. sales_manager"
+                    value={newRole.slug}
+                    onChange={(e) => setNewRole({ ...newRole, slug: e.target.value })}
+                    required
+                    disabled={isEditMode}
+                  />
+                  {isEditMode && <div className="form-text small text-muted">Role slugs cannot be changed later.</div>}
+                </div>
+                <div className="mb-4 pt-3 border-top">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <CFormLabel className="fw-bold small mb-0">Permissions Matrix</CFormLabel>
+                    <CFormCheck
+                      id="select-all-caps"
+                      label={<span style={{ fontSize: '10px' }} className="text-muted">SELECT ALL</span>}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
                     />
                   </div>
-                  <div className="mb-3">
-                    <CFormLabel>Role Slug</CFormLabel>
-                    <CFormInput 
-                       placeholder="e.g. sales_manager"
-                       value={newRole.slug}
-                       onChange={(e) => setNewRole({ ...newRole, slug: e.target.value })}
-                       required
-                       disabled={isEditMode}
-                    />
-                    {isEditMode && <div className="form-text small text-muted">Role slugs cannot be changed later.</div>}
-                  </div>
-                  <div className="mb-4 pt-3 border-top">
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <CFormLabel className="fw-bold small mb-0">Permissions Matrix</CFormLabel>
-                      <CFormCheck 
-                        id="select-all-caps"
-                        label={<span style={{ fontSize: '10px' }} className="text-muted">SELECT ALL</span>}
-                        onChange={(e) => handleSelectAll(e.target.checked)}
-                      />
-                    </div>
-                    <div className="table-responsive">
-                      <CTable small borderless className="small mb-0 align-middle">
-                        <CTableHead>
-                          <CTableRow className="text-muted" style={{ fontSize: '10px' }}>
-                            <CTableHeaderCell>SECTION</CTableHeaderCell>
-                            <CTableHeaderCell className="text-center">V</CTableHeaderCell>
-                            <CTableHeaderCell className="text-center">A</CTableHeaderCell>
-                            <CTableHeaderCell className="text-center">E</CTableHeaderCell>
-                            <CTableHeaderCell className="text-center">D</CTableHeaderCell>
+                  <div className="table-responsive">
+                    <CTable small borderless className="small mb-0 align-middle">
+                      <CTableHead>
+                        <CTableRow className="text-muted" style={{ fontSize: '10px' }}>
+                          <CTableHeaderCell>SECTION</CTableHeaderCell>
+                          <CTableHeaderCell className="text-center">V</CTableHeaderCell>
+                          <CTableHeaderCell className="text-center">A</CTableHeaderCell>
+                          <CTableHeaderCell className="text-center">E</CTableHeaderCell>
+                          <CTableHeaderCell className="text-center">D</CTableHeaderCell>
+                        </CTableRow>
+                      </CTableHead>
+                      <CTableBody>
+                        {sections.map((sec) => (
+                          <CTableRow key={sec.key}>
+                            <CTableDataCell className="fw-semibold">{sec.name}</CTableDataCell>
+                            <CTableDataCell className="text-center">
+                              <CFormCheck
+                                size="sm"
+                                checked={!!permissions[`${sec.key}_v`]}
+                                onChange={(e) => handlePermissionChange(`${sec.key}_v`, e.target.checked)}
+                              />
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                              {!sec.noAdd && (
+                                <CFormCheck
+                                  size="sm"
+                                  checked={!!permissions[`${sec.key}_a`]}
+                                  onChange={(e) => handlePermissionChange(`${sec.key}_a`, e.target.checked)}
+                                />
+                              )}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                              <CFormCheck
+                                size="sm"
+                                checked={!!permissions[`${sec.key}_e`]}
+                                onChange={(e) => handlePermissionChange(`${sec.key}_e`, e.target.checked)}
+                              />
+                            </CTableDataCell>
+                            <CTableDataCell className="text-center">
+                              {!sec.noDel && (
+                                <CFormCheck
+                                  size="sm"
+                                  checked={!!permissions[`${sec.key}_d`]}
+                                  onChange={(e) => handlePermissionChange(`${sec.key}_d`, e.target.checked)}
+                                />
+                              )}
+                            </CTableDataCell>
                           </CTableRow>
-                        </CTableHead>
-                        <CTableBody>
-                          {sections.map((sec) => (
-                            <CTableRow key={sec.key}>
-                              <CTableDataCell className="fw-semibold">{sec.name}</CTableDataCell>
-                              <CTableDataCell className="text-center">
-                                <CFormCheck 
-                                  size="sm" 
-                                  checked={!!permissions[`${sec.key}_v`]} 
-                                  onChange={(e) => handlePermissionChange(`${sec.key}_v`, e.target.checked)}
-                                />
-                              </CTableDataCell>
-                              <CTableDataCell className="text-center">
-                                {!sec.noAdd && (
-                                  <CFormCheck 
-                                    size="sm" 
-                                    checked={!!permissions[`${sec.key}_a`]} 
-                                    onChange={(e) => handlePermissionChange(`${sec.key}_a`, e.target.checked)}
-                                  />
-                                )}
-                              </CTableDataCell>
-                              <CTableDataCell className="text-center">
-                                <CFormCheck 
-                                  size="sm" 
-                                  checked={!!permissions[`${sec.key}_e`]} 
-                                  onChange={(e) => handlePermissionChange(`${sec.key}_e`, e.target.checked)}
-                                />
-                              </CTableDataCell>
-                              <CTableDataCell className="text-center">
-                                {!sec.noDel && (
-                                  <CFormCheck 
-                                    size="sm" 
-                                    checked={!!permissions[`${sec.key}_d`]} 
-                                    onChange={(e) => handlePermissionChange(`${sec.key}_d`, e.target.checked)}
-                                  />
-                                )}
-                              </CTableDataCell>
-                            </CTableRow>
-                          ))}
-                        </CTableBody>
-                      </CTable>
-                    </div>
-                    <div className="text-muted mt-2" style={{ fontSize: '10px' }}>
-                       V=View, A=Add, E=Edit, D=Delete
-                    </div>
+                        ))}
+                      </CTableBody>
+                    </CTable>
                   </div>
-                  <div className="d-flex justify-content-between">
-                    <CButton color="secondary" variant="ghost" size="sm" onClick={() => setShowAddRole(false)}>
-                       Cancel
-                    </CButton>
-                    <CButton color="primary" size="sm" type="submit" disabled={loading}>
-                       {loading ? <CSpinner size="sm" /> : (isEditMode ? 'Update Role' : 'Create Role')}
-                    </CButton>
+                  <div className="text-muted mt-2" style={{ fontSize: '10px' }}>
+                    V=View, A=Add, E=Edit, D=Delete
                   </div>
-               </CForm>
+                </div>
+                <div className="d-flex justify-content-between">
+                  <CButton color="secondary" variant="ghost" size="sm" onClick={() => setShowAddRole(false)}>
+                    Cancel
+                  </CButton>
+                  <CButton color="primary" size="sm" type="submit" disabled={loading}>
+                    {loading ? <CSpinner size="sm" /> : (isEditMode ? 'Update Role' : 'Create Role')}
+                  </CButton>
+                </div>
+              </CForm>
             </CCardBody>
           </CCard>
           <CAlert color="info" className="small">
-             <strong>Developer Tip:</strong> New roles require a custom WordPress endpoint. I have provided the PHP code for your <code>functions.php</code> to make this form fully functional.
+            <strong>Developer Tip:</strong> New roles require a custom WordPress endpoint. I have provided the PHP code for your <code>functions.php</code> to make this form fully functional.
           </CAlert>
         </CCol>
       )}

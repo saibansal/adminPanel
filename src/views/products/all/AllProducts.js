@@ -55,11 +55,11 @@ const AllProducts = () => {
 
     try {
       // Loop to fetch all pages if there are more than 100 products
+      const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
       do {
-        const response = await fetch(`${BASE_URL}wc/v3/products?per_page=100&page=${page}`, {
+        const response = await fetch(`${BASE_URL}wc/v3/products?per_page=100&page=${page}&${authParams}`, {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': API_CONFIG.getBasicAuthHeader(),
           },
         })
 
@@ -70,7 +70,7 @@ const AllProducts = () => {
 
         const data = await response.json()
         allProducts = [...allProducts, ...data]
-        
+
         // Get total pages from headers
         totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '1')
         page++
@@ -121,11 +121,9 @@ const AllProducts = () => {
     setDeleteConfirm({ visible: false, id: null })
     setProcessingId(id)
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}?force=true`, {
+      const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}?force=true&${authParams}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': API_CONFIG.getBasicAuthHeader(),
-        },
       })
 
       if (response.ok) {
@@ -201,12 +199,12 @@ const AllProducts = () => {
                       <CTableDataCell style={{ minWidth: '200px' }}>
                         <div className="fw-bold text-primary">{item.name}</div>
                         <div className="small text-muted d-flex align-items-center">
-                          ID: {item.id} 
-                          <CButton 
-                            variant="ghost" 
-                            color="dark" 
-                            size="sm" 
-                            className="ms-1 p-0 px-1 py-0 height-auto" 
+                          ID: {item.id}
+                          <CButton
+                            variant="ghost"
+                            color="dark"
+                            size="sm"
+                            className="ms-1 p-0 px-1 py-0 height-auto"
                             title="View All Data"
                             onClick={() => showRawData(item)}
                           >
@@ -247,24 +245,24 @@ const AllProducts = () => {
                       </CTableDataCell>
                       <CTableDataCell className="text-center">
                         <div className="d-flex justify-content-center">
-                          <CButton 
-                            color="info" 
-                            size="sm" 
-                            className="me-2 text-white shadow-sm" 
+                          <CButton
+                            color="info"
+                            size="sm"
+                            className="me-2 text-white shadow-sm"
                             title="Edit"
                             onClick={() => navigate(`/products/edit/${item.id}`)}
                           >
                             <CIcon icon={cilPencil} />
                           </CButton>
-                          <CButton 
-                            color="danger" 
-                            size="sm" 
-                            className="text-white shadow-sm" 
+                          <CButton
+                            color="danger"
+                            size="sm"
+                            className="text-white shadow-sm"
                             title="Delete"
                             disabled={processingId === item.id}
                             onClick={() => handleDeleteProduct(item.id)}
                           >
-                             {processingId === item.id ? <CSpinner size="sm" /> : <CIcon icon={cilTrash} />}
+                            {processingId === item.id ? <CSpinner size="sm" /> : <CIcon icon={cilTrash} />}
                           </CButton>
                         </div>
                       </CTableDataCell>

@@ -97,6 +97,7 @@ const AllOrders = () => {
     const apiStatus = newStatus.toLowerCase().replace(' ', '-')
     setProcessingId(db_id)
     try {
+      const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
       const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders/${db_id}?${authParams}`, {
         method: 'PUT',
         headers: {
@@ -188,7 +189,7 @@ const AllOrders = () => {
       const text = e.target.result
       const lines = text.split('\n').slice(1).filter(line => line.trim())
       const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
-      
+
       setLoading(true)
       let successCount = 0
       const total = lines.length
@@ -197,7 +198,7 @@ const AllOrders = () => {
         setImportProgress(`Syncing ${i + 1} of ${total}...`)
         const line = lines[i]
         const [id, customer, date, status, totalAmount] = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
-        
+
         const orderData = {
           status: (status || 'processing').toLowerCase().trim().replace(' ', '-'),
           billing: {
@@ -224,7 +225,7 @@ const AllOrders = () => {
           console.error('Import row failed:', err)
         }
       }
-      
+
       setImportProgress(null)
       showStatus('Sync Complete', `${successCount} orders persisted to WordPress.`, 'success')
       fetchOrders()
@@ -241,7 +242,7 @@ const AllOrders = () => {
           <CCardHeader className="bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
             <div className="fw-bold fs-5 text-dark">
               <CIcon icon={cilBasket} className="me-2 text-primary" />
-              WooCommerce Orders
+              Orders
               <CButton variant="ghost" size="sm" className="ms-2 p-0 text-muted" onClick={fetchOrders} title="Refresh Sync">
                 <CIcon icon={cilCloudDownload} size="sm" />
               </CButton>
@@ -298,13 +299,13 @@ const AllOrders = () => {
                         <div className="d-flex justify-content-center gap-1">
                           <CButton color="primary" variant="ghost" size="sm" onClick={() => handleViewDetails(order)}>View</CButton>
                           <CButton color="success" variant="ghost" size="sm" title="Complete" disabled={processingId === order.db_id} onClick={() => handleUpdateStatus(order.db_id, 'Completed')}>
-                             {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilCheckCircle} />}
+                            {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilCheckCircle} />}
                           </CButton>
                           <CButton color="warning" variant="ghost" size="sm" title="On Hold" disabled={processingId === order.db_id} onClick={() => handleUpdateStatus(order.db_id, 'On Hold')}>
-                             {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilInfo} />}
+                            {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilInfo} />}
                           </CButton>
                           <CButton color="danger" variant="ghost" size="sm" title="Cancel" disabled={processingId === order.db_id} onClick={() => handleUpdateStatus(order.db_id, 'Cancelled')}>
-                             {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilBan} />}
+                            {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilBan} />}
                           </CButton>
                           <CButton color="danger" variant="ghost" size="sm" title="Delete" onClick={() => handleDeleteOrder(order.db_id)}><CIcon icon={cilTrash} /></CButton>
                         </div>

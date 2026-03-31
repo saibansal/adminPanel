@@ -20,7 +20,7 @@ import { cilSave, cilLockLocked, cilGlobeAlt, cilTerminal } from '@coreui/icons'
 const StripeSettings = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-  
+
   const [config, setConfig] = useState({
     enabled: true,
     title: 'Credit Card (Stripe)',
@@ -45,7 +45,7 @@ const StripeSettings = () => {
   const handleSave = () => {
     setIsSaving(true)
     localStorage.setItem('stripe_config', JSON.stringify(config))
-    
+
     // Simulate API call to save settings to WooCommerce
     setTimeout(() => {
       setIsSaving(false)
@@ -75,21 +75,21 @@ const StripeSettings = () => {
 
               <CForm className="row g-4">
                 <CCol md={12}>
-                  <CFormSwitch 
-                    label="Enable Stripe" 
+                  <CFormSwitch
+                    label="Enable Stripe"
                     id="stripeEnable"
                     checked={config.enabled}
-                    onChange={(e) => setConfig({...config, enabled: e.target.checked})}
+                    onChange={(e) => setConfig({ ...config, enabled: e.target.checked })}
                   />
                   <div className="text-muted small ms-4">When enabled, customers can pay with credit cards at checkout.</div>
                 </CCol>
 
                 <CCol md={12}>
-                  <CFormSwitch 
-                    label="Enable Test Mode" 
+                  <CFormSwitch
+                    label="Enable Test Mode"
                     id="stripeTestMode"
                     checked={config.testMode}
-                    onChange={(e) => setConfig({...config, testMode: e.target.checked})}
+                    onChange={(e) => setConfig({ ...config, testMode: e.target.checked })}
                   />
                   <div className="text-muted small ms-4">Use test keys for development and live keys for production orders.</div>
                 </CCol>
@@ -101,19 +101,19 @@ const StripeSettings = () => {
                     <h6 className="mb-0"><CIcon icon={cilTerminal} className="me-2" />Test Credentials</h6>
                     <CCol md={12}>
                       <CFormLabel className="small fw-bold">Test Publishable Key</CFormLabel>
-                      <CFormInput 
+                      <CFormInput
                         placeholder="pk_test_..."
                         value={config.testPublishableKey}
-                        onChange={(e) => setConfig({...config, testPublishableKey: e.target.value})}
+                        onChange={(e) => setConfig({ ...config, testPublishableKey: e.target.value })}
                       />
                     </CCol>
                     <CCol md={12}>
                       <CFormLabel className="small fw-bold">Test Secret Key</CFormLabel>
-                      <CFormInput 
+                      <CFormInput
                         type="password"
                         placeholder="sk_test_..."
                         value={config.testSecretKey}
-                        onChange={(e) => setConfig({...config, testSecretKey: e.target.value})}
+                        onChange={(e) => setConfig({ ...config, testSecretKey: e.target.value })}
                       />
                     </CCol>
                   </>
@@ -122,19 +122,19 @@ const StripeSettings = () => {
                     <h6 className="mb-0 text-success"><CIcon icon={cilGlobeAlt} className="me-2" />Live Credentials</h6>
                     <CCol md={12}>
                       <CFormLabel className="small fw-bold text-success">Live Publishable Key</CFormLabel>
-                      <CFormInput 
+                      <CFormInput
                         placeholder="pk_live_..."
                         value={config.livePublishableKey}
-                        onChange={(e) => setConfig({...config, livePublishableKey: e.target.value})}
+                        onChange={(e) => setConfig({ ...config, livePublishableKey: e.target.value })}
                       />
                     </CCol>
                     <CCol md={12}>
                       <CFormLabel className="small fw-bold text-success">Live Secret Key</CFormLabel>
-                      <CFormInput 
+                      <CFormInput
                         type="password"
                         placeholder="sk_live_..."
                         value={config.liveSecretKey}
-                        onChange={(e) => setConfig({...config, liveSecretKey: e.target.value})}
+                        onChange={(e) => setConfig({ ...config, liveSecretKey: e.target.value })}
                       />
                     </CCol>
                   </>
@@ -145,11 +145,11 @@ const StripeSettings = () => {
                 <CCol md={12}>
                   <h6 className="mb-3"><CIcon icon={cilLockLocked} className="me-2" />Webhooks & Security</h6>
                   <CFormLabel className="small fw-bold">Webhook Signing Secret</CFormLabel>
-                  <CFormInput 
+                  <CFormInput
                     type="password"
                     placeholder="whsec_..."
                     value={config.webhookSecret}
-                    onChange={(e) => setConfig({...config, webhookSecret: e.target.value})}
+                    onChange={(e) => setConfig({ ...config, webhookSecret: e.target.value })}
                   />
                   <div className="text-muted small mt-2">Required to handle events like successful payments and partial refunds automatically.</div>
                 </CCol>
@@ -171,26 +171,26 @@ const StripeSettings = () => {
               <CForm className="row g-3">
                 <CCol md={12}>
                   <CFormLabel className="small fw-bold">Method Title</CFormLabel>
-                  <CFormInput 
+                  <CFormInput
                     value={config.title}
-                    onChange={(e) => setConfig({...config, title: e.target.value})}
+                    onChange={(e) => setConfig({ ...config, title: e.target.value })}
                   />
                   <div className="text-muted small mt-1">Shown to customers during checkout.</div>
                 </CCol>
                 <CCol md={12}>
                   <CFormLabel className="small fw-bold">Method Description</CFormLabel>
-                  <CFormTextarea 
+                  <CFormTextarea
                     rows={3}
                     value={config.description}
-                    onChange={(e) => setConfig({...config, description: e.target.value})}
+                    onChange={(e) => setConfig({ ...config, description: e.target.value })}
                   />
                 </CCol>
                 <CCol md={12} className="mt-4">
-                  <CFormSwitch 
-                    label="Capture payment immediately" 
+                  <CFormSwitch
+                    label="Capture payment immediately"
                     id="stripeCapture"
                     checked={config.capture}
-                    onChange={(e) => setConfig({...config, capture: e.target.checked})}
+                    onChange={(e) => setConfig({ ...config, capture: e.target.checked })}
                   />
                   <div className="text-muted small ms-4">If unchecked, payments will be authorized but must be captured manually in the dashboard.</div>
                 </CCol>

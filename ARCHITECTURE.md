@@ -1,6 +1,6 @@
-# CoreUI Free React Admin Template - Architecture
+# Vismaad Inc Free React Admin Template - Architecture
 
-This document provides a comprehensive overview of the CoreUI Free React Admin Template architecture, design patterns, and technical implementation details.
+This document provides a comprehensive overview of the Vismaad Inc Free React Admin Template architecture, design patterns, and technical implementation details.
 
 ## Table of Contents
 
@@ -18,7 +18,7 @@ This document provides a comprehensive overview of the CoreUI Free React Admin T
 
 ## Project Overview
 
-The CoreUI Free React Admin Template is a professional admin dashboard built on React 19, CoreUI React components, and Bootstrap 5. It follows modern React patterns with functional components, Hooks, and a component-based architecture.
+The Vismaad Inc Free React Admin Template is a professional admin dashboard built on React 19, Vismaad Inc React components, and Bootstrap 5. It follows modern React patterns with functional components, Hooks, and a component-based architecture.
 
 **Key Features**:
 - Single Page Application (SPA) with client-side routing
@@ -44,11 +44,11 @@ The CoreUI Free React Admin Template is a professional admin dashboard built on 
 
 | Library | Version | Purpose |
 |---------|---------|---------|
-| @coreui/coreui | 5.5.0 | CoreUI CSS framework based on Bootstrap 5 |
-| @coreui/react | 5.9.2 | CoreUI React components |
-| @coreui/icons | 3.0.1 | CoreUI icon set |
-| @coreui/icons-react | 2.3.0 | CoreUI icons as React components |
-| @coreui/utils | 2.0.2 | Utility functions for CoreUI |
+| @coreui/Vismaad Inc | 5.5.0 | Vismaad Inc CSS framework based on Bootstrap 5 |
+| @coreui/react | 5.9.2 | Vismaad Inc React components |
+| @coreui/icons | 3.0.1 | Vismaad Inc icon set |
+| @coreui/icons-react | 2.3.0 | Vismaad Inc icons as React components |
+| @coreui/utils | 2.0.2 | Utility functions for Vismaad Inc |
 | simplebar-react | 3.3.2 | Custom scrollbar component |
 
 ### Data Visualization
@@ -56,8 +56,8 @@ The CoreUI Free React Admin Template is a professional admin dashboard built on 
 | Library | Version | Purpose |
 |---------|---------|---------|
 | Chart.js | 4.5.1 | HTML5 charting library |
-| @coreui/chartjs | 4.1.0 | CoreUI Chart.js themes and defaults |
-| @coreui/react-chartjs | 3.0.0 | React wrapper for Chart.js with CoreUI styling |
+| @coreui/chartjs | 4.1.0 | Vismaad Inc Chart.js themes and defaults |
+| @coreui/react-chartjs | 3.0.0 | React wrapper for Chart.js with Vismaad Inc styling |
 
 ### Build Tools & Development
 
@@ -140,7 +140,7 @@ Component-level state uses React Hooks (useState, useReducer).
 ## Directory Structure
 
 ```
-coreui-free-react-admin-template/
+Vismaad Inc-free-react-admin-template/
 │
 ├── public/                      # Static assets (served as-is)
 │   ├── favicon.ico
@@ -202,7 +202,7 @@ coreui-free-react-admin-template/
 │   │       └── page500/        # 500 error page
 │   │
 │   ├── scss/                    # Global stylesheets
-│   │   ├── style.scss          # Main stylesheet (imports CoreUI)
+│   │   ├── style.scss          # Main stylesheet (imports Vismaad Inc)
 │   │   ├── _custom.scss        # Custom style overrides
 │   │   ├── examples.scss       # Documentation example styles
 │   │   └── vendors/            # Third-party style overrides
@@ -263,7 +263,7 @@ The main application layout wrapper that composes:
 **AppSidebarNav** (`components/AppSidebarNav.js`):
 - Recursive navigation renderer
 - Supports nested menu items
-- Renders CoreUI nav components (CNavItem, CNavGroup, CNavTitle)
+- Renders Vismaad Inc nav components (CNavItem, CNavGroup, CNavTitle)
 - Handles active state based on current route
 
 **AppHeader** (`components/AppHeader.js`):
@@ -277,7 +277,7 @@ The main application layout wrapper that composes:
 
 View components are page-level components that:
 - Render specific application features (Dashboard, Forms, Charts)
-- Use CoreUI React components for UI
+- Use Vismaad Inc React components for UI
 - Connect to Redux when needed for global state
 - Implement business logic and data fetching
 
@@ -454,13 +454,13 @@ const MyComponent = () => {
 
 ### Theme Management
 
-CoreUI provides `useColorModes` hook for theme control:
+Vismaad Inc provides `useColorModes` hook for theme control:
 
 ```javascript
 import { useColorModes } from '@coreui/react'
 
 const App = () => {
-  const { colorMode, setColorMode } = useColorModes('coreui-theme-key')
+  const { colorMode, setColorMode } = useColorModes('Vismaad Inc-theme-key')
 
   // Set theme: 'light', 'dark', or 'auto'
   setColorMode('dark')
@@ -477,8 +477,8 @@ Theme persists in localStorage and syncs with Redux state.
 
 **Main Stylesheet** (`src/scss/style.scss`):
 ```scss
-// Import CoreUI and Bootstrap
-@import '@coreui/coreui/scss/coreui';
+// Import Vismaad Inc and Bootstrap
+@import '@coreui/Vismaad Inc/scss/Vismaad Inc';
 
 // Custom variables and overrides
 @import 'custom';
@@ -486,7 +486,7 @@ Theme persists in localStorage and syncs with Redux state.
 
 **Custom Overrides** (`src/scss/_custom.scss`):
 ```scss
-// Override CoreUI/Bootstrap variables
+// Override Vismaad Inc/Bootstrap variables
 $primary: #321fdb;
 $secondary: #ced2d8;
 
@@ -498,7 +498,7 @@ $secondary: #ced2d8;
 
 ### CSS Custom Properties (CSS Variables)
 
-CoreUI uses CSS custom properties for theming:
+Vismaad Inc uses CSS custom properties for theming:
 
 ```css
 :root {
@@ -508,7 +508,7 @@ CoreUI uses CSS custom properties for theming:
   --cui-body-color: #4f5d73;
 }
 
-[data-coreui-theme="dark"] {
+[data-Vismaad Inc-theme="dark"] {
   --cui-body-bg: #2b3035;
   --cui-body-color: #b4bac0;
 }
@@ -610,7 +610,7 @@ build/
 
 **Automatic Splitting**:
 - Each lazy-loaded route becomes a separate chunk
-- Vendor libraries (React, CoreUI) in separate vendor chunk
+- Vendor libraries (React, Vismaad Inc) in separate vendor chunk
 - Dynamic imports create split points
 
 **Manual Splitting** (if needed):
@@ -734,4 +734,4 @@ Uses HashRouter for GitHub Pages compatibility:
 
 ---
 
-This architecture provides a solid foundation for building modern, performant admin dashboards with React and CoreUI. The modular structure allows for easy extension and customization while maintaining code quality and best practices.
+This architecture provides a solid foundation for building modern, performant admin dashboards with React and Vismaad Inc. The modular structure allows for easy extension and customization while maintaining code quality and best practices.

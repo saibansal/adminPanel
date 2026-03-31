@@ -110,7 +110,7 @@ const AddPage = () => {
       if (pageData.featured_media > 0) {
         payload.featured_media = pageData.featured_media
       }
-      
+
       if (pageData.parent > 0) {
         payload.parent = pageData.parent
       }
@@ -183,20 +183,20 @@ const AddPage = () => {
               </CFormSelect>
             </div>
             <div className="mb-3">
-               <CFormLabel className="small fw-bold">Featured Image</CFormLabel>
-               <div 
-                  className="bg-light border rounded text-center p-2 cursor-pointer position-relative" 
-                  style={{ minHeight: '120px' }}
-                  onClick={() => document.getElementById('page-img-input').click()}
-               >
-                  {pageData.featured_media_url ? (
-                    <img src={pageData.featured_media_url} className="img-fluid rounded" alt="Featured" />
-                  ) : (
-                    <div className="py-4 text-muted"><CIcon icon={cilImage} size="xl" className="opacity-25" /><br/>Set featured image</div>
-                  )}
-                  {uploading && <div className="position-absolute top-50 start-50 translate-middle"><CSpinner size="sm"/></div>}
-                  <input type="file" id="page-img-input" hidden onChange={handleImageUpload} accept="image/*" />
-               </div>
+              <CFormLabel className="small fw-bold">Featured Image</CFormLabel>
+              <div
+                className="bg-light border rounded text-center p-2 cursor-pointer position-relative"
+                style={{ minHeight: '120px' }}
+                onClick={() => document.getElementById('page-img-input').click()}
+              >
+                {pageData.featured_media_url ? (
+                  <img src={pageData.featured_media_url} className="img-fluid rounded" alt="Featured" />
+                ) : (
+                  <div className="py-4 text-muted"><CIcon icon={cilImage} size="xl" className="opacity-25" /><br />Set featured image</div>
+                )}
+                {uploading && <div className="position-absolute top-50 start-50 translate-middle"><CSpinner size="sm" /></div>}
+                <input type="file" id="page-img-input" hidden onChange={handleImageUpload} accept="image/*" />
+              </div>
             </div>
             <div className="mb-3">
               <CFormLabel className="small fw-bold">Menu Order</CFormLabel>
