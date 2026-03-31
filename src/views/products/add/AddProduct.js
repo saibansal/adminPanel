@@ -119,74 +119,87 @@ const AddProduct = () => {
       try {
         const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
 
-        // Fetch categories separately for reuse
-        fetchCategories()
-
-        const [attrRes, taxRes, shipRes, prodRes] = await Promise.all([
+        // 1. Fetch Global Data (Categories, Attributes, etc.)
+        const [attrRes, taxRes, shipRes, prodRes, catRes] = await Promise.all([
           fetch(`${API_CONFIG.BASE_URL}wc/v3/products/attributes?${authParams}`),
           fetch(`${API_CONFIG.BASE_URL}wc/v3/taxes/classes?${authParams}`),
           fetch(`${API_CONFIG.BASE_URL}wc/v3/products/shipping_classes?${authParams}`),
-          fetch(`${API_CONFIG.BASE_URL}wc/v3/products?per_page=50&${authParams}`)
+          fetch(`${API_CONFIG.BASE_URL}wc/v3/products?per_page=50&${authParams}`),
+          fetch(`${API_CONFIG.BASE_URL}wc/v3/products/categories?per_page=100&${authParams}`)
         ])
 
         if (attrRes.ok) setGlobalAttributes(await attrRes.json())
         if (taxRes.ok) setTaxClasses(await taxRes.json())
         if (shipRes.ok) setShippingClasses(await shipRes.json())
         if (prodRes.ok) setAllProducts(await prodRes.json())
+        if (catRes.ok) setCategories(await catRes.json())
+
+        // 2. Fetch Product Data if in Edit Mode
+        if (id) {
+          const res = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}?${authParams}`)
+          if (res.ok) {
+            const data = await res.json()
+
+            // Flatten tags for input
+            const tagsInput = data.tags ? data.tags.map(t => t.name).join(', ') : ''
+
+            // Process Attributes for UI (Fetch terms for global attributes)
+            const uiAttributes = await Promise.all((data.attributes || []).map(async (attr) => {
+              let uiAttr = { ...attr };
+              if (attr.id === 0) {
+                uiAttr.rawValue = attr.options ? attr.options.join(' | ') : '';
+                uiAttr.isCustom = true;
+              } else {
+                try {
+                  const termRes = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/attributes/${attr.id}/terms?${authParams}`);
+                  if (termRes.ok) {
+                    const terms = await termRes.json();
+                    uiAttr.availableTerms = terms.map(t => t.name);
+                  }
+                } catch (e) {
+                  console.error(`Error fetching terms for attribute ${attr.name}:`, e);
+                }
+              }
+              return uiAttr;
+            }));
+
+            setProductData({
+              ...data,
+              tags_input: tagsInput,
+              attributes: uiAttributes || [],
+              categories: data.categories || [],
+              images: data.images || [],
+              downloadable_files: data.downloadable_files || [],
+              date_on_sale_from: data.date_on_sale_from ? data.date_on_sale_from.split('T')[0] : '',
+              date_on_sale_to: data.date_on_sale_to ? data.date_on_sale_to.split('T')[0] : '',
+              low_stock_amount: (data.low_stock_amount !== null && data.low_stock_amount !== undefined) ? data.low_stock_amount : '',
+              stock_quantity: (data.stock_quantity !== null && data.stock_quantity !== undefined) ? data.stock_quantity : '',
+            })
+
+            if (data.type === 'grouped' && activeKey === 1) setActiveKey(2);
+
+            // Fetch variations for variable products
+            if (data.type === 'variable') {
+              const varRes = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}/variations?per_page=100&${authParams}`)
+              if (varRes.ok) {
+                const varData = await varRes.json()
+                setVariations(varData.map(v => ({
+                  ...v,
+                  stock_quantity: (v.stock_quantity !== null && v.stock_quantity !== undefined) ? v.stock_quantity : '',
+                  dimensions: v.dimensions || { length: '', width: '', height: '' }
+                })))
+              }
+            }
+          }
+        }
       } catch (err) {
-        console.error('Error fetching initial data:', err)
+        console.error('Error in initial data fetch:', err)
         setError('Failed to connect to WooCommerce. Please check your connection.')
       } finally {
         setInitialDataLoading(false)
       }
     }
     fetchData()
-  }, [])
-
-  // 2. Fetch data for Edit Mode
-  useEffect(() => {
-    if (!id) return
-
-    const fetchProduct = async () => {
-      setInitialDataLoading(true)
-      try {
-        const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
-        const res = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}?${authParams}`)
-        if (res.ok) {
-          const data = await res.json()
-
-          // Flatten tags for input
-          const tagsInput = data.tags ? data.tags.map(t => t.name).join(', ') : ''
-
-          setProductData({
-            ...data,
-            tags_input: tagsInput,
-            // Ensure numeric fields aren't null for UI
-            low_stock_amount: data.low_stock_amount || '',
-            stock_quantity: data.stock_quantity || '',
-          })
-
-          // If variable product, fetch variations
-          if (data.type === 'variable') {
-            const varRes = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}/variations?per_page=100&${authParams}`)
-            if (varRes.ok) {
-              const varData = await varRes.json()
-              setVariations(varData.map(v => ({
-                ...v,
-                // Ensure dimensions exist
-                dimensions: v.dimensions || { length: '', width: '', height: '' }
-              })))
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching product for edit:', err)
-        showStatus('Load Error', 'Failed to load product for editing.', 'danger')
-      } finally {
-        setInitialDataLoading(false)
-      }
-    }
-    fetchProduct()
   }, [id])
 
   const handleChange = (e) => {
@@ -869,7 +882,7 @@ const AddProduct = () => {
                                 <CFormInput type="number" id="download_expiry" placeholder="Never" value={productData.download_expiry === -1 ? '' : productData.download_expiry} onChange={handleChange} size="sm" />
                               </CCol>
                             </CRow>
-                            {productData.downloadable_files.map((file, idx) => (
+                            {(productData.downloadable_files || []).map((file, idx) => (
                               <div key={idx} className="bg-light p-3 rounded mb-2 mx-3 shadow-sm border">
                                 <CRow className="g-2">
                                   <CCol md={6}>
@@ -925,7 +938,7 @@ const AddProduct = () => {
                       </CTabPane>
 
                       <CTabPane visible={activeKey === 6}>
-                        {productData.attributes.filter(a => a.variation).length === 0 ? (
+                        {(productData.attributes || []).filter(a => a.variation).length === 0 ? (
                           <div className="text-center p-5 text-muted bg-light rounded">
                             <p>Before you can add variations, you need to add some variation attributes on the <strong>Attributes</strong> tab.</p>
                             <CButton color="primary" variant="outline" size="sm" onClick={() => setActiveKey(4)}>Go to Attributes</CButton>

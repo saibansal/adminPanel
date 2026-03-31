@@ -19,7 +19,7 @@ import React from 'react'
 const AllProducts = React.lazy(() => import('./views/products/all/AllProducts'))
 const AddProduct = React.lazy(() => import('./views/products/add/AddProduct'))
 const Brands = React.lazy(() => import('./views/products/brands/Brands'))
-const Categories = React.lazy(() => import('./views/products/categories/Categories'))
+const Categories = React.lazy(() => import('./views/products/categories/index'))
 const Tags = React.lazy(() => import('./views/products/tags/Tags'))
 const Attributes = React.lazy(() => import('./views/products/attributes/Attributes'))
 

@@ -200,7 +200,7 @@ const AllProducts = () => {
                         <div className="fw-bold text-primary">{item.name}</div>
                         <div className="small text-muted d-flex align-items-center">
                           ID: {item.id}
-                          <CButton
+                          {/* <CButton
                             variant="ghost"
                             color="dark"
                             size="sm"
@@ -209,7 +209,7 @@ const AllProducts = () => {
                             onClick={() => showRawData(item)}
                           >
                             <CIcon icon={cilCode} size="sm" />
-                          </CButton>
+                          </CButton> */}
                         </div>
                       </CTableDataCell>
                       <CTableDataCell>
