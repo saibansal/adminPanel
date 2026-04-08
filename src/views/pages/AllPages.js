@@ -20,6 +20,9 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
+  CNav,
+  CNavItem,
+  CNavLink,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
@@ -33,6 +36,7 @@ const AllPages = () => {
   const [processingId, setProcessingId] = useState(null)
   const [statusModal, setStatusModal] = useState({ visible: false, title: '', message: '', color: 'primary' })
   const [deleteConfirm, setDeleteConfirm] = useState({ visible: false, id: null })
+  const [currentTab, setCurrentTab] = useState('active') // 'active' or 'trash'
   const navigate = useNavigate()
 
   const showStatus = (title, message, color = 'primary') => {
@@ -41,7 +45,7 @@ const AllPages = () => {
 
   useEffect(() => {
     fetchPages()
-  }, [])
+  }, [currentTab])
 
   const fetchPages = async () => {
     setLoading(true)
@@ -54,7 +58,8 @@ const AllPages = () => {
     try {
       const headers = { 'Authorization': API_CONFIG.getJWTHeader() }
       do {
-        const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/pages?status=publish,draft,pending,private,future&_embed&per_page=100&page=${pageNum}`, {
+        const statusQuery = currentTab === 'trash' ? 'status=trash' : 'status=publish,draft,pending,private,future'
+        const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/pages?status=${statusQuery}&_embed&per_page=100&page=${pageNum}`, {
           headers
         })
 
@@ -88,18 +93,44 @@ const AllPages = () => {
     setProcessingId(id)
     const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/pages/${id}?${authParams}`, {
+      const forceParam = currentTab === 'trash' ? 'force=true' : 'force=false'
+      const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/pages/${id}?${forceParam}&${authParams}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
         setPages(pages.filter((p) => p.id !== id))
-        showStatus('Success', 'Page moved to trash.', 'success')
+        showStatus('Success', currentTab === 'trash' ? 'Page deleted permanently.' : 'Page moved to trash.', 'success')
       } else {
         showStatus('Delete Failed', 'Could not delete page.', 'danger')
       }
     } catch (err) {
       showStatus('Error', err.message || 'Network error.', 'danger')
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleRestorePage = async (id) => {
+    setProcessingId(id)
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/pages/${id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': API_CONFIG.getJWTHeader(),
+        },
+        body: JSON.stringify({ status: 'publish' })
+      })
+
+      if (response.ok) {
+        setPages(pages.filter(p => p.id !== id))
+        showStatus('Restored', 'Page has been moved back to Published.', 'success')
+      } else {
+        showStatus('Restore Failed', 'Failed to restore page.', 'danger')
+      }
+    } catch (err) {
+      showStatus('Error', 'Network error.', 'danger')
     } finally {
       setProcessingId(null)
     }
@@ -115,6 +146,18 @@ const AllPages = () => {
               <CIcon icon={cilPlus} className="me-1" /> Add Page
             </CButton>
           </CCardHeader>
+          <CNav variant="tabs" className="px-3 pt-2 bg-light bg-opacity-10">
+            <CNavItem>
+              <CNavLink active={currentTab === 'active'} onClick={() => setCurrentTab('active')} className="cursor-pointer">
+                Active Pages
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink active={currentTab === 'trash'} onClick={() => setCurrentTab('trash')} className="cursor-pointer text-danger">
+                Trash Bin
+              </CNavLink>
+            </CNavItem>
+          </CNav>
           <CCardBody>
             {error && <CAlert color="danger">{error}</CAlert>}
 
@@ -152,34 +195,29 @@ const AllPages = () => {
                         </CBadge>
                       </CTableDataCell>
                       <CTableDataCell className="text-center">
-                        <div className="d-flex justify-content-center">
-                          <CButton
-                            color="info"
-                            size="sm"
-                            className="me-2 text-white"
-                            onClick={() => navigate(`/pages/edit/${page.id}`)}
-                          >
-                            <CIcon icon={cilPencil} />
-                          </CButton>
-                          <CButton
-                            color="danger"
-                            size="sm"
-                            className="text-white"
-                            disabled={processingId === page.id}
-                            onClick={() => handleDeletePage(page.id)}
-                          >
-                            {processingId === page.id ? <CSpinner size="sm" /> : <CIcon icon={cilTrash} />}
-                          </CButton>
-                          <CButton
-                            color="dark"
-                            variant="outline"
-                            size="sm"
-                            className="ms-2"
-                            href={page.link}
-                            target="_blank"
-                          >
-                            <CIcon icon={cilExternalLink} />
-                          </CButton>
+                        <div className="d-flex justify-content-center gap-1">
+                          {currentTab === 'trash' ? (
+                            <>
+                              <CButton color="success" variant="ghost" size="sm" title="Restore" onClick={() => handleRestorePage(page.id)}>
+                                {processingId === page.id ? <CSpinner size="sm" /> : <span>Restore</span>}
+                              </CButton>
+                              <CButton color="danger" variant="ghost" size="sm" title="Delete Permanently" onClick={() => handleDeletePage(page.id)}>
+                                <CIcon icon={cilTrash} />
+                              </CButton>
+                            </>
+                          ) : (
+                            <>
+                              <CButton color="info" variant="ghost" size="sm" title="Edit" onClick={() => navigate(`/pages/edit/${page.id}`)}>
+                                <CIcon icon={cilPencil} />
+                              </CButton>
+                              <CButton color="danger" variant="ghost" size="sm" title="Move to Trash" disabled={processingId === page.id} onClick={() => handleDeletePage(page.id)}>
+                                {processingId === page.id ? <CSpinner size="sm" /> : <CIcon icon={cilTrash} />}
+                              </CButton>
+                              <CButton color="success" variant="ghost" size="sm" title="View" href={page.link} target="_blank">
+                                <CIcon icon={cilExternalLink} />
+                              </CButton>
+                            </>
+                          )}
                         </div>
                       </CTableDataCell>
                     </CTableRow>
@@ -215,14 +253,16 @@ const AllPages = () => {
           <CModalTitle className="text-danger">Delete Page</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          Are you sure you want to move this page to the trash?
+          {currentTab === 'trash' 
+            ? 'Are you sure you want to permanently delete this page? This action cannot be undone.'
+            : 'Are you sure you want to move this page to the trash?'}
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setDeleteConfirm({ visible: false, id: null })}>
             Cancel
           </CButton>
           <CButton color="danger" className="text-white" onClick={confirmDeletePage}>
-            Move to Trash
+            {currentTab === 'trash' ? 'Delete Permanently' : 'Move to Trash'}
           </CButton>
         </CModalFooter>
       </CModal>

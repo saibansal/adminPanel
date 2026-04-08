@@ -20,6 +20,9 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
+  CNav,
+  CNavItem,
+  CNavLink,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
@@ -33,6 +36,7 @@ const AllPosts = () => {
   const [processingId, setProcessingId] = useState(null)
   const [statusModal, setStatusModal] = useState({ visible: false, title: '', message: '', color: 'primary' })
   const [deleteConfirm, setDeleteConfirm] = useState({ visible: false, id: null })
+  const [currentTab, setCurrentTab] = useState('active') // 'active' or 'trash'
   const navigate = useNavigate()
 
   const showStatus = (title, message, color = 'primary') => {
@@ -41,7 +45,7 @@ const AllPosts = () => {
 
   useEffect(() => {
     fetchPosts()
-  }, [])
+  }, [currentTab])
 
   const fetchPosts = async () => {
     setLoading(true)
@@ -59,7 +63,8 @@ const AllPosts = () => {
       }
 
       do {
-        const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts?status=publish,draft,pending,private,future&_embed&per_page=100&page=${pageNum}`, {
+        const statusQuery = currentTab === 'trash' ? 'status=trash' : 'status=publish,draft,pending,private,future'
+        const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts?status=${statusQuery}&_embed&per_page=100&page=${pageNum}`, {
           headers
         })
 
@@ -89,9 +94,12 @@ const AllPosts = () => {
   }
 
   const confirmDeletePost = async () => {
+    const id = deleteConfirm.id
+    setDeleteConfirm({ visible: false, id: null })
+    setProcessingId(id)
     try {
-      setProcessingId(id)
-      const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts/${id}`, {
+      const forceParam = currentTab === 'trash' ? '?force=true' : ''
+      const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts/${id}${forceParam}`, {
         method: 'DELETE',
         headers: {
           'Authorization': API_CONFIG.getBasicAuthHeader(),
@@ -100,13 +108,38 @@ const AllPosts = () => {
 
       if (response.ok) {
         setPosts(posts.filter((p) => p.id !== id))
-        showStatus('Success', 'Post moved to trash.', 'success')
+        showStatus('Success', currentTab === 'trash' ? 'Post deleted permanently.' : 'Post moved to trash.', 'success')
       } else {
         const errorData = await response.json().catch(() => ({}))
         showStatus('Delete Failed', errorData.message || 'Could not delete post.', 'danger')
       }
     } catch (err) {
       showStatus('Error', err.message || 'Network error.', 'danger')
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleRestorePost = async (id) => {
+    setProcessingId(id)
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts/${id}`, {
+        method: 'POST', // WP REST API use POST for updates
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': API_CONFIG.getBasicAuthHeader(),
+        },
+        body: JSON.stringify({ status: 'publish' })
+      })
+
+      if (response.ok) {
+        setPosts(posts.filter(p => p.id !== id))
+        showStatus('Restored', 'Post has been moved back to Published.', 'success')
+      } else {
+        showStatus('Restore Failed', 'Failed to restore post.', 'danger')
+      }
+    } catch (err) {
+      showStatus('Error', 'Network error.', 'danger')
     } finally {
       setProcessingId(null)
     }
@@ -122,6 +155,18 @@ const AllPosts = () => {
               <CIcon icon={cilPlus} className="me-1" /> Add Post
             </CButton>
           </CCardHeader>
+          <CNav variant="tabs" className="px-3 pt-2 bg-light bg-opacity-10">
+            <CNavItem>
+              <CNavLink active={currentTab === 'active'} onClick={() => setCurrentTab('active')} className="cursor-pointer">
+                Active Posts
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink active={currentTab === 'trash'} onClick={() => setCurrentTab('trash')} className="cursor-pointer text-danger">
+                Trash Bin
+              </CNavLink>
+            </CNavItem>
+          </CNav>
           <CCardBody>
             {error && <CAlert color="danger">{error}</CAlert>}
 
@@ -161,38 +206,31 @@ const AllPosts = () => {
                           {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
                         </CBadge>
                       </CTableDataCell>
-                      <CTableDataCell>
-                        {new Date(post.date).toLocaleDateString()}
-                      </CTableDataCell>
+                      <CTableDataCell>{new Date(post.date).toLocaleDateString()}</CTableDataCell>
                       <CTableDataCell className="text-center">
-                        <div className="d-flex justify-content-center">
-                          <CButton
-                            color="info"
-                            size="sm"
-                            className="me-2 text-white"
-                            onClick={() => navigate(`/posts/edit/${post.id}`)}
-                          >
-                            <CIcon icon={cilPencil} />
-                          </CButton>
-                          <CButton
-                            color="danger"
-                            size="sm"
-                            className="text-white"
-                            disabled={processingId === post.id}
-                            onClick={() => handleDeletePost(post.id)}
-                          >
-                            {processingId === post.id ? <CSpinner size="sm" /> : <CIcon icon={cilTrash} />}
-                          </CButton>
-                          <CButton
-                            color="dark"
-                            variant="outline"
-                            size="sm"
-                            className="ms-2"
-                            href={post.link}
-                            target="_blank"
-                          >
-                            <CIcon icon={cilExternalLink} />
-                          </CButton>
+                        <div className="d-flex justify-content-center gap-1">
+                          {currentTab === 'trash' ? (
+                            <>
+                              <CButton color="success" variant="ghost" size="sm" title="Restore" onClick={() => handleRestorePost(post.id)}>
+                                 {processingId === post.id ? <CSpinner size="sm" /> : <span>Restore</span>}
+                              </CButton>
+                              <CButton color="danger" variant="ghost" size="sm" title="Delete Permanently" onClick={() => handleDeletePost(post.id)}>
+                                <CIcon icon={cilTrash} />
+                              </CButton>
+                            </>
+                          ) : (
+                            <>
+                              <CButton color="primary" variant="ghost" size="sm" title="Edit" onClick={() => navigate(`/posts/edit/${post.id}`)}>
+                                <CIcon icon={cilPencil} />
+                              </CButton>
+                              <CButton color="danger" variant="ghost" size="sm" title="Move to Trash" disabled={processingId === post.id} onClick={() => handleDeletePost(post.id)}>
+                                {processingId === post.id ? <CSpinner size="sm" /> : <CIcon icon={cilTrash} />}
+                              </CButton>
+                              <CButton color="success" variant="ghost" size="sm" title="View" href={post.link} target="_blank">
+                                <CIcon icon={cilExternalLink} />
+                              </CButton>
+                            </>
+                          )}
                         </div>
                       </CTableDataCell>
                     </CTableRow>

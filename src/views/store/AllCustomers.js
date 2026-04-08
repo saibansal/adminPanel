@@ -237,12 +237,27 @@ const AllCustomers = () => {
         }
 
         try {
-          const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/customers?${authParams}`, {
-            method: 'POST',
+          const id = parts[0]
+          const isUpdate = id && !isNaN(id) && parseInt(id) > 0
+          const apiUrl = isUpdate
+            ? `${API_CONFIG.BASE_URL}wc/v3/customers/${id}?${authParams}`
+            : `${API_CONFIG.BASE_URL}wc/v3/customers?${authParams}`
+
+          const response = await fetch(apiUrl, {
+            method: isUpdate ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(customerData)
           })
-          if (response.ok) successCount++
+          if (response.ok) {
+            successCount++
+          } else if (isUpdate) {
+            const createResponse = await fetch(`${API_CONFIG.BASE_URL}wc/v3/customers?${authParams}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(customerData)
+            })
+            if (createResponse.ok) successCount++
+          }
         } catch (err) {
           console.error('Customer import row failed:', err)
         }

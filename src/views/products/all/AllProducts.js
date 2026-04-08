@@ -20,10 +20,13 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
+  CNav,
+  CNavItem,
+  CNavLink,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
-import { cilPencil, cilTrash, cilExternalLink, cilCode } from '@coreui/icons'
+import { cilPencil, cilTrash, cilExternalLink, cilCode, cilCloudDownload, cilCloudUpload } from '@coreui/icons'
 import API_CONFIG from 'src/apiConfig'
 
 const AllProducts = () => {
@@ -35,6 +38,8 @@ const AllProducts = () => {
   const [processingId, setProcessingId] = useState(null)
   const [statusModal, setStatusModal] = useState({ visible: false, title: '', message: '', color: 'primary' })
   const [deleteConfirm, setDeleteConfirm] = useState({ visible: false, id: null })
+  const [currentTab, setCurrentTab] = useState('active') // 'active' or 'trash'
+  const [importProgress, setImportProgress] = useState(null)
   const navigate = useNavigate()
 
   const showStatus = (title, message, color = 'primary') => {
@@ -43,7 +48,7 @@ const AllProducts = () => {
 
   useEffect(() => {
     fetchAllProducts()
-  }, [])
+  }, [currentTab])
 
   const fetchAllProducts = async () => {
     setLoading(true)
@@ -57,7 +62,8 @@ const AllProducts = () => {
       // Loop to fetch all pages if there are more than 100 products
       const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
       do {
-        const response = await fetch(`${BASE_URL}wc/v3/products?per_page=100&page=${page}&${authParams}`, {
+        const statusQuery = currentTab === 'trash' ? 'status=trash' : 'status=any'
+        const response = await fetch(`${BASE_URL}wc/v3/products?per_page=100&page=${page}&${authParams}&${statusQuery}`, {
           headers: {
             'Content-Type': 'application/json',
           },
@@ -122,22 +128,137 @@ const AllProducts = () => {
     setProcessingId(id)
     try {
       const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
-      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}?force=true&${authParams}`, {
+      
+      // If in trash tab, delete permanently (force=true). Otherwise, move to trash.
+      const forceParam = currentTab === 'trash' ? 'force=true' : 'force=false'
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}?${forceParam}&${authParams}`, {
         method: 'DELETE',
       })
 
       if (response.ok) {
         setProducts(products.filter((p) => p.id !== id))
-        showStatus('Success', 'Product deleted successfully.', 'success')
+        showStatus('Success', currentTab === 'trash' ? 'Product deleted permanently.' : 'Product moved to trash.', 'success')
       } else {
         const errorData = await response.json()
-        showStatus('Delete Failed', errorData.message || 'Failed to delete product', 'danger')
+        showStatus('Delete Failed', errorData.message || 'Failed to remove product', 'danger')
       }
     } catch (err) {
       showStatus('Error', err.message || 'Network error.', 'danger')
     } finally {
       setProcessingId(null)
     }
+  }
+
+  const handleRestoreProduct = async (id) => {
+    setProcessingId(id)
+    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products/${id}?${authParams}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'publish' })
+      })
+      if (response.ok) {
+        setProducts(products.filter(p => p.id !== id))
+        showStatus('Restored', 'Product has been moved back to Published.', 'success')
+      } else {
+        showStatus('Restore Failed', 'Failed to restore product.', 'danger')
+      }
+    } catch (err) {
+      showStatus('Error', 'Network error.', 'danger')
+    } finally {
+      setProcessingId(null)
+    }
+  }
+
+  const handleExport = () => {
+    const headers = ['ID', 'Name', 'SKU', 'Price', 'Regular Price', 'Stock', 'Status', 'Categories']
+    const csvContent = [
+      headers.join(','),
+      ...products.map(p => {
+        const catNames = p.categories ? p.categories.map(c => c.name).join('|') : ''
+        return `${p.id},"${p.name}","${p.sku || ''}",${p.price || 0},${p.regular_price || 0},${p.stock_quantity || 0},${p.status},"${catNames}"`
+      })
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.setAttribute('hidden', '')
+    a.setAttribute('href', url)
+    a.setAttribute('download', `woo_products_export_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
+  const handleImport = (event) => {
+    const file = event.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      const text = e.target.result
+      const lines = text.split('\n').slice(1).filter(line => line.trim())
+      const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+
+      setLoading(true)
+      let successCount = 0
+      const total = lines.length
+
+      for (let i = 0; i < total; i++) {
+        setImportProgress(`Syncing ${i + 1} of ${total}...`)
+        const line = lines[i]
+        // Basic CSV parser for quoted strings
+        const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.trim().replace(/^"|"$/g, ''))
+        const [id, name, sku, price, regular_price, stock, status, categoriesString] = parts
+
+        const productData = {
+          name: name || 'Imported Product',
+          sku: sku || '',
+          regular_price: regular_price || price || '0',
+          status: status || 'publish',
+          manage_stock: !!stock,
+          stock_quantity: parseInt(stock || 0)
+        }
+
+        if (categoriesString) {
+          productData.categories = categoriesString.split('|').map(catName => ({ name: catName }))
+        }
+
+        try {
+          const isUpdate = id && !isNaN(id) && parseInt(id) > 0
+          const apiUrl = isUpdate 
+            ? `${API_CONFIG.BASE_URL}wc/v3/products/${id}?${authParams}`
+            : `${API_CONFIG.BASE_URL}wc/v3/products?${authParams}`
+          
+          const response = await fetch(apiUrl, {
+            method: isUpdate ? 'PUT' : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+          })
+          
+          if (response.ok) {
+            successCount++
+          } else if (isUpdate) {
+            // If ID update fails (e.g. product doesn't exist anymore), try creating it
+            const createResponse = await fetch(`${API_CONFIG.BASE_URL}wc/v3/products?${authParams}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(productData)
+            })
+            if (createResponse.ok) successCount++
+          }
+        } catch (err) {
+          console.error('Product import row failed:', err)
+        }
+      }
+
+      setImportProgress(null)
+      showStatus('Import Complete', `${successCount} products synchronized in WooCommerce.`, 'success')
+      fetchAllProducts()
+    }
+    reader.readAsText(file)
   }
 
   return (
@@ -149,12 +270,42 @@ const AllProducts = () => {
               <strong>All Products</strong>
               <small className="ms-2 text-muted fw-normal">({products.length} items total)</small>
             </h5>
-            <CButton color="outline-primary" size="sm" onClick={fetchAllProducts} disabled={loading}>
-              {loading ? <CSpinner size="sm" className="me-1" /> : 'Refresh All'}
-            </CButton>
+            <div className="d-flex gap-2">
+              <CButton color="outline-secondary" size="sm" onClick={handleExport} disabled={loading}>
+                <CIcon icon={cilCloudDownload} className="me-1" /> Export
+              </CButton>
+              <CButton color="outline-primary" size="sm" onClick={() => document.getElementById('import-products').click()} disabled={loading}>
+                <CIcon icon={cilCloudUpload} className="me-1" /> Import
+              </CButton>
+              <input type="file" id="import-products" hidden onChange={handleImport} accept=".csv" />
+              <CButton color="outline-info" size="sm" onClick={fetchAllProducts} disabled={loading}>
+                {loading ? <CSpinner size="sm" className="me-1" /> : 'Refresh All'}
+              </CButton>
+            </div>
           </CCardHeader>
+          <CNav variant="tabs" className="px-3 pt-2 bg-light bg-opacity-10">
+            <CNavItem>
+              <CNavLink active={currentTab === 'active'} onClick={() => setCurrentTab('active')} className="cursor-pointer">
+                Active Products
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink active={currentTab === 'trash'} onClick={() => setCurrentTab('trash')} className="cursor-pointer text-danger">
+                Trash Bin
+              </CNavLink>
+            </CNavItem>
+          </CNav>
           <CCardBody>
             {error && <CAlert color="danger">{error}</CAlert>}
+            {importProgress && (
+              <CAlert color="info" className="d-flex align-items-center mb-4">
+                <CSpinner size="sm" className="me-3" />
+                <div>
+                  <strong>Importing Products...</strong>
+                  <div className="small text-muted">{importProgress}</div>
+                </div>
+              </CAlert>
+            )}
 
             {loading && products.length === 0 ? (
               <div className="text-center p-5">
@@ -245,35 +396,48 @@ const AllProducts = () => {
                       </CTableDataCell>
                       <CTableDataCell className="text-center">
                         <div className="d-flex justify-content-center">
-                          <CButton
-                            color="info"
-                            size="sm"
-                            className="me-2 text-white shadow-sm"
-                            title="Edit"
-                            onClick={() => navigate(`/products/edit/${item.id}`)}
-                          >
-                            <CIcon icon={cilPencil} />
-                          </CButton>
-                          <CButton
-                            color="success"
-                            size="sm"
-                            className="me-2 text-white shadow-sm"
-                            title="View in Store"
-                            href={`${API_CONFIG.FRONTEND_URL}product/${item.slug}`}
-                            target="_blank"
-                          >
-                            <CIcon icon={cilExternalLink} />
-                          </CButton>
-                          <CButton
-                            color="danger"
-                            size="sm"
-                            className="text-white shadow-sm"
-                            title="Delete"
-                            disabled={processingId === item.id}
-                            onClick={() => handleDeleteProduct(item.id)}
-                          >
-                            {processingId === item.id ? <CSpinner size="sm" /> : <CIcon icon={cilTrash} />}
-                          </CButton>
+                          {currentTab === 'trash' ? (
+                            <>
+                              <CButton color="success" size="sm" className="me-2 text-white shadow-sm" title="Restore" onClick={() => handleRestoreProduct(item.id)}>
+                                {processingId === item.id ? <CSpinner size="sm" /> : <span>Restore</span>}
+                              </CButton>
+                              <CButton color="danger" size="sm" className="text-white shadow-sm" title="Delete Permanently" onClick={() => handleDeleteProduct(item.id)}>
+                                <CIcon icon={cilTrash} />
+                              </CButton>
+                            </>
+                          ) : (
+                            <>
+                              <CButton
+                                color="info"
+                                size="sm"
+                                className="me-2 text-white shadow-sm"
+                                title="Edit"
+                                onClick={() => navigate(`/products/edit/${item.id}`)}
+                              >
+                                <CIcon icon={cilPencil} />
+                              </CButton>
+                              <CButton
+                                color="success"
+                                size="sm"
+                                className="me-2 text-white shadow-sm"
+                                title="View in Store"
+                                href={`${API_CONFIG.FRONTEND_URL}product/${item.slug}`}
+                                target="_blank"
+                              >
+                                <CIcon icon={cilExternalLink} />
+                              </CButton>
+                              <CButton
+                                color="danger"
+                                size="sm"
+                                className="text-white shadow-sm"
+                                title="Move to Trash"
+                                disabled={processingId === item.id}
+                                onClick={() => handleDeleteProduct(item.id)}
+                              >
+                                {processingId === item.id ? <CSpinner size="sm" /> : <CIcon icon={cilTrash} />}
+                              </CButton>
+                            </>
+                          )}
                         </div>
                       </CTableDataCell>
                     </CTableRow>

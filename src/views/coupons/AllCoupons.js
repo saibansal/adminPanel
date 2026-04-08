@@ -20,6 +20,9 @@ import {
   CModalTitle,
   CModalBody,
   CModalFooter,
+  CNav,
+  CNavItem,
+  CNavLink,
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import CIcon from '@coreui/icons-react'
@@ -32,6 +35,7 @@ const AllCoupons = () => {
   const [error, setError] = useState(null)
   const [statusModal, setStatusModal] = useState({ visible: false, title: '', message: '', color: 'primary' })
   const [deleteConfirm, setDeleteConfirm] = useState({ visible: false, id: null })
+  const [currentTab, setCurrentTab] = useState('active') // 'active' or 'trash'
   const navigate = useNavigate()
 
   const showStatus = (title, message, color = 'primary') => {
@@ -41,9 +45,9 @@ const AllCoupons = () => {
   const fetchCoupons = async () => {
     setLoading(true)
     setError(null)
-    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}&status=any`
+    const statusFilter = currentTab === 'trash' ? '&status=trash' : '&status=any'
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/coupons?${authParams}`)
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/coupons?${authParams}${statusFilter}`)
       if (!response.ok) throw new Error('Failed to synchronize with WooCommerce')
       const data = await response.json();
       setCoupons(data);
@@ -57,7 +61,7 @@ const AllCoupons = () => {
 
   useEffect(() => {
     fetchCoupons()
-  }, [])
+  }, [currentTab])
 
   const handleDeleteCoupon = (id) => {
     setDeleteConfirm({ visible: true, id })
@@ -69,17 +73,41 @@ const AllCoupons = () => {
     setLoading(true)
     const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/coupons/${id}?force=true&${authParams}`, {
+      const forceParam = currentTab === 'trash' ? 'force=true' : 'force=false'
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/coupons/${id}?${forceParam}&${authParams}`, {
         method: 'DELETE',
       })
       if (response.ok) {
         setCoupons(coupons.filter((c) => c.id !== id))
-        showStatus('Success', 'Coupon deleted successfully.', 'success')
+        showStatus('Success', currentTab === 'trash' ? 'Coupon deleted permanently.' : 'Coupon moved to trash.', 'success')
       } else {
         showStatus('Error', 'Failed to delete coupon.', 'danger')
       }
     } catch (err) {
       showStatus('Error', err.message || 'Network error.', 'danger')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRestoreCoupon = async (id) => {
+    setLoading(true)
+    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/coupons/${id}?${authParams}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'publish' })
+      })
+
+      if (response.ok) {
+        setCoupons(coupons.filter(c => c.id !== id))
+        showStatus('Restored', 'Coupon has been moved back to Active.', 'success')
+      } else {
+        showStatus('Restore Failed', 'Failed to restore coupon.', 'danger')
+      }
+    } catch (err) {
+      showStatus('Error', 'Network error.', 'danger')
     } finally {
       setLoading(false)
     }
@@ -136,6 +164,18 @@ const AllCoupons = () => {
               <CIcon icon={cilPlus} className="me-1" /> Add Coupon
             </CButton>
           </CCardHeader>
+          <CNav variant="tabs" className="px-3 pt-2 bg-light bg-opacity-10">
+            <CNavItem>
+              <CNavLink active={currentTab === 'active'} onClick={() => setCurrentTab('active')} className="cursor-pointer">
+                Active Coupons
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink active={currentTab === 'trash'} onClick={() => setCurrentTab('trash')} className="cursor-pointer text-danger">
+                Trash Bin
+              </CNavLink>
+            </CNavItem>
+          </CNav>
           <CCardBody>
             {loading ? (
               <div className="text-center py-5"><CSpinner color="primary" /></div>
@@ -189,35 +229,35 @@ const AllCoupons = () => {
                         </CTableDataCell>
                         <CTableDataCell className="text-center">
                           <div className="d-flex justify-content-center gap-1">
-                            <CButton
-                              color={coupon.status === 'publish' ? 'success' : 'warning'}
-                              variant="ghost"
-                              size="sm"
-                              title={isExpired ? 'Expired coupons cannot be toggled' : coupon.status === 'publish' ? 'Lock Coupon' : 'Unlock Coupon'}
-                              onClick={() => handleToggleStatus(coupon)}
-                              disabled={isDisabled}
-                            >
-                              <CIcon icon={coupon.status === 'publish' ? cilLockUnlocked : cilLockLocked} />
-                            </CButton>
-                            <CButton
-                              color="info"
-                              variant="ghost"
-                              size="sm"
-                              title={isDisabled ? 'Editing is disabled for this coupon' : 'Edit Coupon'}
-                              onClick={() => navigate(`/coupons/edit/${coupon.id}`)}
-                              disabled={isDisabled}
-                            >
-                              <CIcon icon={cilPencil} />
-                            </CButton>
-                            <CButton
-                              color="danger"
-                              variant="ghost"
-                              size="sm"
-                              title="Delete Coupon"
-                              onClick={() => handleDeleteCoupon(coupon.id)}
-                            >
-                              <CIcon icon={cilTrash} />
-                            </CButton>
+                            {currentTab === 'trash' ? (
+                              <>
+                                <CButton color="success" variant="ghost" size="sm" title="Restore" onClick={() => handleRestoreCoupon(coupon.id)}>
+                                  Restore
+                                </CButton>
+                                <CButton color="danger" variant="ghost" size="sm" title="Delete Permanently" onClick={() => handleDeleteCoupon(coupon.id)}>
+                                  <CIcon icon={cilTrash} />
+                                </CButton>
+                              </>
+                            ) : (
+                              <>
+                                <CButton
+                                  color={coupon.status === 'publish' ? 'success' : 'warning'}
+                                  variant="ghost"
+                                  size="sm"
+                                  title={isExpired ? 'Expired coupons cannot be toggled' : coupon.status === 'publish' ? 'Lock Coupon' : 'Unlock Coupon'}
+                                  onClick={() => handleToggleStatus(coupon)}
+                                  disabled={isDisabled}
+                                >
+                                  <CIcon icon={coupon.status === 'publish' ? cilLockUnlocked : cilLockLocked} />
+                                </CButton>
+                                <CButton color="info" variant="ghost" size="sm" title={isDisabled ? 'Editing is disabled for this coupon' : 'Edit Coupon'} onClick={() => navigate(`/coupons/edit/${coupon.id}`)} disabled={isDisabled}>
+                                  <CIcon icon={cilPencil} />
+                                </CButton>
+                                <CButton color="danger" variant="ghost" size="sm" title="Move to Trash" onClick={() => handleDeleteCoupon(coupon.id)}>
+                                  <CIcon icon={cilTrash} />
+                                </CButton>
+                              </>
+                            )}
                           </div>
                         </CTableDataCell>
                       </CTableRow>
@@ -255,14 +295,16 @@ const AllCoupons = () => {
           <CModalTitle className="text-danger">Delete Coupon</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          Are you sure you want to permanently delete this coupon from WooCommerce? This action cannot be undone.
+          {currentTab === 'trash' 
+            ? 'Are you sure you want to permanently delete this coupon? This action cannot be undone.'
+            : 'Are you sure you want to move this coupon to the trash?'}
         </CModalBody>
         <CModalFooter>
           <CButton color="secondary" onClick={() => setDeleteConfirm({ visible: false, id: null })}>
             Cancel
           </CButton>
           <CButton color="danger" className="text-white" onClick={confirmDeleteCoupon}>
-            Delete Permanently
+            {currentTab === 'trash' ? 'Delete Permanently' : 'Move to Trash'}
           </CButton>
         </CModalFooter>
       </CModal>

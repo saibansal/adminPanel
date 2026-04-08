@@ -26,6 +26,9 @@ import {
   CFormLabel,
   CFormSelect,
   CAlert,
+  CNav,
+  CNavItem,
+  CNavLink,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
@@ -53,6 +56,7 @@ const AllOrders = () => {
   const [deleteConfirm, setDeleteConfirm] = useState({ visible: false, id: null })
   const [selectedIds, setSelectedIds] = useState([])
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false)
+  const [currentTab, setCurrentTab] = useState('active') // 'active' or 'trash'
 
   const showStatus = (title, message, color = 'primary') => {
     setStatusModal({ visible: true, title, message, color })
@@ -69,10 +73,15 @@ const AllOrders = () => {
       let hasMore = true
 
       while (hasMore) {
-        const response = await fetch(
-          `${API_CONFIG.BASE_URL}wc/v3/orders?${authParams}&per_page=${PER_PAGE}&page=${page}&orderby=id&order=desc`,
-          { headers: { 'Content-Type': 'application/json' } }
-        )
+        let url = `${API_CONFIG.BASE_URL}wc/v3/orders?${authParams}&per_page=${PER_PAGE}&page=${page}&orderby=id&order=desc`
+        if (currentTab === 'trash') {
+          url += `&status=trash`
+        } else {
+          // Exclude trash from active view
+          url += `&status=any`
+        }
+
+        const response = await fetch(url, { headers: { 'Content-Type': 'application/json' } })
         if (!response.ok) throw new Error('Failed to synchronize with WooCommerce API')
 
         const data = await response.json()
@@ -110,11 +119,10 @@ const AllOrders = () => {
   useEffect(() => {
     fetchOrders()
 
-    // Refetch automatically whenever user switches back to this browser tab
     const handleFocus = () => fetchOrders()
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
-  }, [])
+  }, [currentTab])
 
   const handleUpdateStatus = async (db_id, newStatus) => {
     const apiStatus = newStatus.toLowerCase().replace(' ', '-')
@@ -151,21 +159,46 @@ const AllOrders = () => {
     setDeleteConfirm({ visible: false, id: null })
     setLoading(true)
     const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+
+    // If in trash tab, delete permanently (force=true). Otherwise, move to trash.
+    const forceParam = currentTab === 'trash' ? 'force=true' : 'force=false'
+
     try {
-      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders/${db_id}?force=true&${authParams}`, {
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders/${db_id}?${forceParam}&${authParams}`, {
         method: 'DELETE'
       })
       if (response.ok) {
-        // Optimistic UI: Remove from state immediately
         setOrders(orders.filter(o => o.db_id !== db_id))
-        showStatus('Deleted', 'Order removed from WooCommerce.', 'success')
+        showStatus('Success', currentTab === 'trash' ? 'Order deleted permanently.' : 'Order moved to trash.', 'success')
       } else {
-        showStatus('Delete Failed', 'Failed to delete order.', 'danger')
+        showStatus('Delete Failed', 'Failed to remove order.', 'danger')
       }
     } catch (err) {
       showStatus('Error', 'Network error during deletion.', 'danger')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleRestoreOrder = async (db_id) => {
+    setProcessingId(db_id)
+    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders/${db_id}?${authParams}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'processing' })
+      })
+      if (response.ok) {
+        setOrders(orders.filter(o => o.db_id !== db_id))
+        showStatus('Restored', 'Order has been moved back to Processing.', 'success')
+      } else {
+        showStatus('Restore Failed', 'Failed to restore order.', 'danger')
+      }
+    } catch (err) {
+      showStatus('Error', 'Network error.', 'danger')
+    } finally {
+      setProcessingId(null)
     }
   }
 
@@ -179,10 +212,13 @@ const AllOrders = () => {
     setLoading(true)
     const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
     let successCount = 0
+    // If in trash tab, delete permanently (force=true). Otherwise, move to trash.
+    const forceParam = currentTab === 'trash' ? 'force=true' : 'force=false'
+
     try {
       await Promise.all(
         selectedIds.map(async (db_id) => {
-          const res = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders/${db_id}?force=true&${authParams}`, {
+          const res = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders/${db_id}?${forceParam}&${authParams}`, {
             method: 'DELETE'
           })
           if (res.ok) successCount++
@@ -190,7 +226,7 @@ const AllOrders = () => {
       )
       setOrders(orders.filter(o => !selectedIds.includes(o.db_id)))
       setSelectedIds([])
-      showStatus('Bulk Delete', `${successCount} of ${selectedIds.length} orders deleted permanently.`, 'success')
+      showStatus('Bulk Delete', `${successCount} of ${selectedIds.length} orders ${currentTab === 'trash' ? 'deleted permanently' : 'moved to trash'}.`, 'success')
     } catch (err) {
       showStatus('Error', 'Some orders could not be deleted.', 'danger')
     } finally {
@@ -262,14 +298,30 @@ const AllOrders = () => {
         }
 
         try {
-          const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders?${authParams}`, {
-            method: 'POST',
+          const isUpdate = id && !isNaN(id) && parseInt(id) > 0
+          const apiUrl = isUpdate
+            ? `${API_CONFIG.BASE_URL}wc/v3/orders/${id}?${authParams}`
+            : `${API_CONFIG.BASE_URL}wc/v3/orders?${authParams}`
+
+          const response = await fetch(apiUrl, {
+            method: isUpdate ? 'PUT' : 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderData)
           })
-          if (response.ok) successCount++
+
+          if (response.ok) {
+            successCount++
+          } else if (isUpdate) {
+            // Fallback for ID that doesn't exist anymore
+            const createResponse = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders?${authParams}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(orderData)
+            })
+            if (createResponse.ok) successCount++
+          }
         } catch (err) {
-          console.error('Import row failed:', err)
+          console.error('Order import row failed:', err)
         }
       }
 
@@ -306,6 +358,18 @@ const AllOrders = () => {
               <CButton color="primary" size="sm" onClick={() => setShowAddModal(true)}>Add Order</CButton>
             </div>
           </CCardHeader>
+          <CNav variant="tabs" className="px-3 pt-2 bg-light bg-opacity-10">
+            <CNavItem>
+              <CNavLink active={currentTab === 'active'} onClick={() => setCurrentTab('active')} className="cursor-pointer">
+                All Orders
+              </CNavLink>
+            </CNavItem>
+            <CNavItem>
+              <CNavLink active={currentTab === 'trash'} onClick={() => setCurrentTab('trash')} className="cursor-pointer text-danger">
+                Trash Bin
+              </CNavLink>
+            </CNavItem>
+          </CNav>
           <CCardBody>
             <div className="mb-4 d-flex justify-content-between align-items-center">
               <div className="d-flex align-items-center gap-3">
@@ -395,17 +459,27 @@ const AllOrders = () => {
                       <CTableDataCell className="fw-bold">{order.total}</CTableDataCell>
                       <CTableDataCell className="text-center">
                         <div className="d-flex justify-content-center gap-1">
-                          <CButton color="primary" variant="ghost" size="sm" onClick={() => handleViewDetails(order)}>View</CButton>
-                          <CButton color="success" variant="ghost" size="sm" title="Complete" disabled={processingId === order.db_id} onClick={() => handleUpdateStatus(order.db_id, 'Completed')}>
-                            {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilCheckCircle} />}
-                          </CButton>
-                          <CButton color="warning" variant="ghost" size="sm" title="On Hold" disabled={processingId === order.db_id} onClick={() => handleUpdateStatus(order.db_id, 'On Hold')}>
-                            {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilInfo} />}
-                          </CButton>
-                          <CButton color="danger" variant="ghost" size="sm" title="Cancel" disabled={processingId === order.db_id} onClick={() => handleUpdateStatus(order.db_id, 'Cancelled')}>
-                            {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilBan} />}
-                          </CButton>
-                          <CButton color="danger" variant="ghost" size="sm" title="Delete" onClick={() => handleDeleteOrder(order.db_id)}><CIcon icon={cilTrash} /></CButton>
+                          {currentTab === 'trash' ? (
+                            <>
+                              <CButton color="success" variant="ghost" size="sm" title="Restore" onClick={() => handleRestoreOrder(order.db_id)}>
+                                {processingId === order.db_id ? <CSpinner size="sm" /> : <span>Restore</span>}
+                              </CButton>
+                              <CButton color="danger" variant="ghost" size="sm" title="Delete Permanently" onClick={() => handleDeleteOrder(order.db_id)}>
+                                <CIcon icon={cilTrash} />
+                              </CButton>
+                            </>
+                          ) : (
+                            <>
+                              <CButton color="primary" variant="ghost" size="sm" onClick={() => handleViewDetails(order)}>View</CButton>
+                              <CButton color="success" variant="ghost" size="sm" title="Complete" disabled={processingId === order.db_id} onClick={() => handleUpdateStatus(order.db_id, 'Completed')}>
+                                {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilCheckCircle} />}
+                              </CButton>
+                              <CButton color="warning" variant="ghost" size="sm" title="On Hold" disabled={processingId === order.db_id} onClick={() => handleUpdateStatus(order.db_id, 'On Hold')}>
+                                {processingId === order.db_id ? <CSpinner size="sm" /> : <CIcon icon={cilInfo} />}
+                              </CButton>
+                              <CButton color="danger" variant="ghost" size="sm" title="Move to Trash" onClick={() => handleDeleteOrder(order.db_id)}><CIcon icon={cilTrash} /></CButton>
+                            </>
+                          )}
                         </div>
                       </CTableDataCell>
                     </CTableRow>
