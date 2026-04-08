@@ -41,12 +41,12 @@ const AllCoupons = () => {
   const fetchCoupons = async () => {
     setLoading(true)
     setError(null)
-    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}&status=any`
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/coupons?${authParams}`)
       if (!response.ok) throw new Error('Failed to synchronize with WooCommerce')
-      const data = await response.json()
-      setCoupons(data)
+      const data = await response.json();
+      setCoupons(data);
     } catch (err) {
       setError(err.message)
       setCoupons([])
@@ -148,64 +148,84 @@ const AllCoupons = () => {
                     <CTableHeaderCell>Amount</CTableHeaderCell>
                     <CTableHeaderCell>Usage Limit</CTableHeaderCell>
                     <CTableHeaderCell>Expiry</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Status</CTableHeaderCell>
                     <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {coupons.map((coupon) => (
-                    <CTableRow key={coupon.id}>
-                      <CTableDataCell>
-                        <strong className="text-primary">{coupon.code.toUpperCase()}</strong>
-                      </CTableDataCell>
-                      <CTableDataCell>{getDiscountTypeLabel(coupon.discount_type)}</CTableDataCell>
-                      <CTableDataCell className="fw-bold fs-5">
-                        {['percent', 'percentage'].includes(coupon.discount_type) ? `${coupon.amount}%` : `$${coupon.amount}`}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge color="light" className="text-dark border me-1">{coupon.usage_count}</CBadge>
-                        <span className="text-muted">/ {coupon.usage_limit || 'Unlimited'}</span>
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {coupon.date_expires ? (
-                          new Date(coupon.date_expires).toLocaleDateString()
-                        ) : (
-                          <span className="text-muted small">Never</span>
-                        )}
-                      </CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        <div className="d-flex justify-content-center gap-1">
-                          <CButton
-                            color={coupon.status === 'publish' ? 'success' : 'warning'}
-                            variant="ghost"
-                            size="sm"
-                            title={coupon.status === 'publish' ? 'Lock Coupon' : 'Unlock Coupon'}
-                            onClick={() => handleToggleStatus(coupon)}
-                          >
-                            <CIcon icon={coupon.status === 'publish' ? cilLockUnlocked : cilLockLocked} />
-                          </CButton>
-                          <CButton
-                            color="info"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => navigate(`/coupons/edit/${coupon.id}`)}
-                          >
-                            <CIcon icon={cilPencil} />
-                          </CButton>
-                          <CButton
-                            color="danger"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteCoupon(coupon.id)}
-                          >
-                            <CIcon icon={cilTrash} />
-                          </CButton>
-                        </div>
-                      </CTableDataCell>
-                    </CTableRow>
-                  ))}
+                  {coupons.map((coupon) => {
+                    const isExpired = coupon.date_expires && new Date(coupon.date_expires) < new Date()
+                    const isDraft = coupon.status === 'draft'
+                    const isDisabled = isExpired || isDraft
+
+                    return (
+                      <CTableRow key={coupon.id} style={isDisabled ? { opacity: 0.5 } : {}}>
+                        <CTableDataCell>
+                          <strong className={isDisabled ? 'text-muted' : 'text-primary'}>
+                            {coupon.code.toUpperCase()}
+                          </strong>
+                        </CTableDataCell>
+                        <CTableDataCell>{getDiscountTypeLabel(coupon.discount_type)}</CTableDataCell>
+                        <CTableDataCell className="fw-bold">
+                          {['percent', 'percentage'].includes(coupon.discount_type) ? `${coupon.amount}%` : `$${coupon.amount}`}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CBadge color="light" className="text-dark border me-1">{coupon.usage_count}</CBadge>
+                          <span className="text-muted">/ {coupon.usage_limit || 'Unlimited'}</span>
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          {coupon.date_expires ? (
+                            <span className={isExpired ? 'text-danger fw-bold' : ''}>
+                              {new Date(coupon.date_expires).toLocaleDateString()}
+                            </span>
+                          ) : (
+                            <span className="text-muted small">Never</span>
+                          )}
+                        </CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          <CBadge color={isExpired ? 'danger' : coupon.status === 'publish' ? 'success' : 'secondary'} className="text-capitalize">
+                            {isExpired ? 'Expired' : coupon.status}
+                          </CBadge>
+                        </CTableDataCell>
+                        <CTableDataCell className="text-center">
+                          <div className="d-flex justify-content-center gap-1">
+                            <CButton
+                              color={coupon.status === 'publish' ? 'success' : 'warning'}
+                              variant="ghost"
+                              size="sm"
+                              title={isExpired ? 'Expired coupons cannot be toggled' : coupon.status === 'publish' ? 'Lock Coupon' : 'Unlock Coupon'}
+                              onClick={() => handleToggleStatus(coupon)}
+                              disabled={isDisabled}
+                            >
+                              <CIcon icon={coupon.status === 'publish' ? cilLockUnlocked : cilLockLocked} />
+                            </CButton>
+                            <CButton
+                              color="info"
+                              variant="ghost"
+                              size="sm"
+                              title={isDisabled ? 'Editing is disabled for this coupon' : 'Edit Coupon'}
+                              onClick={() => navigate(`/coupons/edit/${coupon.id}`)}
+                              disabled={isDisabled}
+                            >
+                              <CIcon icon={cilPencil} />
+                            </CButton>
+                            <CButton
+                              color="danger"
+                              variant="ghost"
+                              size="sm"
+                              title="Delete Coupon"
+                              onClick={() => handleDeleteCoupon(coupon.id)}
+                            >
+                              <CIcon icon={cilTrash} />
+                            </CButton>
+                          </div>
+                        </CTableDataCell>
+                      </CTableRow>
+                    )
+                  })}
                   {coupons.length === 0 && !loading && (
                     <CTableRow>
-                      <CTableDataCell colSpan={6} className="text-center py-5 text-muted">No active coupons found in store.</CTableDataCell>
+                      <CTableDataCell colSpan={7} className="text-center py-5 text-muted">No active coupons found in store.</CTableDataCell>
                     </CTableRow>
                   )}
                 </CTableBody>

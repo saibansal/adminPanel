@@ -678,7 +678,8 @@ const AddProduct = () => {
         }
       }
 
-      showStatus('Success', `Product successfully ${isEditMode ? 'updated' : 'published'}!`, 'success')
+      showStatus('Success', `Product successfully ${isEditMode ? 'updated' : 'published'}!`, 'success');
+      navigate('/products/all');
       if (!isEditMode) {
         // Reset form for new product
         setProductData(prev => ({

@@ -255,6 +255,16 @@ const AllProducts = () => {
                             <CIcon icon={cilPencil} />
                           </CButton>
                           <CButton
+                            color="success"
+                            size="sm"
+                            className="me-2 text-white shadow-sm"
+                            title="View in Store"
+                            href={`${API_CONFIG.FRONTEND_URL}product/${item.slug}`}
+                            target="_blank"
+                          >
+                            <CIcon icon={cilExternalLink} />
+                          </CButton>
+                          <CButton
                             color="danger"
                             size="sm"
                             className="text-white shadow-sm"

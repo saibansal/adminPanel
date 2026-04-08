@@ -46,7 +46,7 @@ const AddUser = () => {
         try {
           const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/users/${id}?context=edit`, {
             headers: {
-              'Authorization': API_CONFIG.getJWTHeader(),
+              'Authorization': API_CONFIG.getJWTHeader()
             },
           })
           if (response.ok) {

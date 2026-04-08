@@ -52,12 +52,44 @@ const StoreSettings = () => {
     const [allCountries, setAllCountries] = useState([])
     const [regionSearch, setRegionSearch] = useState('')
     const [expandedCountries, setExpandedCountries] = useState([])
+    const [pages, setPages] = useState([])
     const [settings, setSettings] = useState({
         enableStock: true,
         lowStockThreshold: 2,
         outOfStockThreshold: 0,
+<<<<<<< HEAD
         storeAddress: '',
         city: ''
+=======
+        storeAddress: '123 Commerce St',
+        city: 'New York',
+        gateways: {
+            paypal: false,
+            bank: false,
+            cod: true
+        },
+        advanced: {
+            // Page Setup
+            cart_page: '',
+            checkout_page: '',
+            myaccount_page: '',
+            terms_page: '',
+            // Checkout Endpoints
+            checkout_pay: 'order-pay',
+            checkout_order_received: 'order-received',
+            add_payment_method: 'add-payment-method',
+            delete_payment_method: 'delete-payment-method',
+            set_default_payment_method: 'set-default-payment-method',
+            // Account Endpoints
+            orders: 'orders',
+            view_order: 'view-order',
+            edit_account: 'edit-account',
+            edit_address: 'edit-address',
+            payment_methods: 'payment-methods',
+            lost_password: 'lost-password',
+            customer_logout: 'customer-logout'
+        }
+>>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
     })
     const [errorMsg, setErrorMsg] = useState(null)
 
@@ -74,17 +106,51 @@ const StoreSettings = () => {
         { id: 'advanced', name: 'Advanced' },
     ]
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true)
+<<<<<<< HEAD
         // Synchronize with front-end Checkout
         localStorage.setItem('wc_store_settings', JSON.stringify(settings))
+=======
+        const authHeader = API_CONFIG.getBasicAuthHeader()
+>>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
 
-        // Simulate API call
-        setTimeout(() => {
-            setIsSaving(false)
+        try {
+            if (activeTab === 'advanced') {
+                const advancedData = [
+                    { id: 'woocommerce_cart_page_id', value: settings.advanced.cart_page },
+                    { id: 'woocommerce_checkout_page_id', value: settings.advanced.checkout_page },
+                    { id: 'woocommerce_myaccount_page_id', value: settings.advanced.myaccount_page },
+                    { id: 'woocommerce_terms_page_id', value: settings.advanced.terms_page },
+                    { id: 'woocommerce_checkout_pay_endpoint', value: settings.advanced.checkout_pay },
+                    { id: 'woocommerce_checkout_order_received_endpoint', value: settings.advanced.checkout_order_received },
+                    { id: 'woocommerce_myaccount_add_payment_method_endpoint', value: settings.advanced.add_payment_method },
+                    { id: 'woocommerce_myaccount_delete_payment_method_endpoint', value: settings.advanced.delete_payment_method },
+                    { id: 'woocommerce_myaccount_set_default_payment_method_endpoint', value: settings.advanced.set_default_payment_method },
+                    { id: 'woocommerce_myaccount_orders_endpoint', value: settings.advanced.orders },
+                    { id: 'woocommerce_myaccount_view_order_endpoint', value: settings.advanced.view_order },
+                    { id: 'woocommerce_myaccount_edit_account_endpoint', value: settings.advanced.edit_account },
+                    { id: 'woocommerce_myaccount_edit_address_endpoint', value: settings.advanced.edit_address },
+                    { id: 'woocommerce_myaccount_payment_methods_endpoint', value: settings.advanced.payment_methods },
+                    { id: 'woocommerce_myaccount_lost_password_endpoint', value: settings.advanced.lost_password },
+                    { id: 'woocommerce_logout_endpoint', value: settings.advanced.customer_logout }
+                ];
+
+                await fetch(`${API_CONFIG.BASE_URL}wc/v3/settings/advanced/batch`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': authHeader },
+                    body: JSON.stringify({ update: advancedData })
+                });
+            }
+
+            localStorage.setItem('wc_payment_settings', JSON.stringify(settings.gateways))
             setShowSuccess(true)
             setTimeout(() => setShowSuccess(false), 3000)
-        }, 1000)
+        } catch (err) {
+            console.error('Save failed:', err)
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     const handleAddZone = async () => {
@@ -168,6 +234,21 @@ const StoreSettings = () => {
 
 
 
+    const fetchPages = async () => {
+        try {
+            const authHeader = API_CONFIG.getBasicAuthHeader()
+            const resp = await fetch(`${API_CONFIG.BASE_URL}wp/v2/pages?per_page=100&status=publish`, {
+                headers: { 'Authorization': authHeader }
+            })
+            if (resp.ok) {
+                const data = await resp.json()
+                setPages(data.map(p => ({ id: p.id, title: p.title.rendered })))
+            }
+        } catch (err) {
+            console.error('Failed to pre-fetch location data:', err)
+        }
+    }
+
     const fetchRemoteConfig = async () => {
         setIsFetching(true)
         setErrorMsg(null)
@@ -237,6 +318,28 @@ const StoreSettings = () => {
                     if (item.id === 'woocommerce_manage_stock') newSettings.enableStock = item.value === 'yes';
                     if (item.id === 'woocommerce_notify_low_stock_amount') newSettings.lowStockThreshold = item.value;
                     if (item.id === 'woocommerce_notify_no_stock_amount') newSettings.outOfStockThreshold = item.value;
+                    
+                    // Advanced Page setup
+                    if (item.id === 'woocommerce_cart_page_id') newSettings.advanced.cart_page = String(item.value);
+                    if (item.id === 'woocommerce_checkout_page_id') newSettings.advanced.checkout_page = String(item.value);
+                    if (item.id === 'woocommerce_myaccount_page_id') newSettings.advanced.myaccount_page = String(item.value);
+                    if (item.id === 'woocommerce_terms_page_id') newSettings.advanced.terms_page = String(item.value);
+
+                    // Checkout Endpoints
+                    if (item.id === 'woocommerce_checkout_pay_endpoint') newSettings.advanced.checkout_pay = item.value;
+                    if (item.id === 'woocommerce_checkout_order_received_endpoint') newSettings.advanced.checkout_order_received = item.value;
+                    if (item.id === 'woocommerce_myaccount_add_payment_method_endpoint') newSettings.advanced.add_payment_method = item.value;
+                    if (item.id === 'woocommerce_myaccount_delete_payment_method_endpoint') newSettings.advanced.delete_payment_method = item.value;
+                    if (item.id === 'woocommerce_myaccount_set_default_payment_method_endpoint') newSettings.advanced.set_default_payment_method = item.value;
+
+                    // Account Endpoints
+                    if (item.id === 'woocommerce_myaccount_orders_endpoint') newSettings.advanced.orders = item.value;
+                    if (item.id === 'woocommerce_myaccount_view_order_endpoint') newSettings.advanced.view_order = item.value;
+                    if (item.id === 'woocommerce_myaccount_edit_account_endpoint') newSettings.advanced.edit_account = item.value;
+                    if (item.id === 'woocommerce_myaccount_edit_address_endpoint') newSettings.advanced.edit_address = item.value;
+                    if (item.id === 'woocommerce_myaccount_payment_methods_endpoint') newSettings.advanced.payment_methods = item.value;
+                    if (item.id === 'woocommerce_myaccount_lost_password_endpoint') newSettings.advanced.lost_password = item.value;
+                    if (item.id === 'woocommerce_logout_endpoint') newSettings.advanced.customer_logout = item.value;
                 });
                 setSettings(newSettings);
             }
@@ -263,6 +366,7 @@ const StoreSettings = () => {
             }
         }
         fetchBaseData();
+        fetchPages();
         fetchRemoteConfig();
     }, [activeTab]);
 
@@ -715,7 +819,54 @@ const StoreSettings = () => {
                                     </CModalFooter>
                                 </CModal>
 
+<<<<<<< HEAD
                                 <CTabPane visible={activeTab === 'pos'}>
+=======
+                                <CTabPane visible={activeTab === 'payments'}>
+                                    <h5 className="mb-4">Payment Gateways</h5>
+                                    <div className="list-group list-group-flush border rounded overflow-hidden">
+                                        {/* PayPal */}
+                                        <div className="list-group-item d-flex justify-content-between align-items-center">
+                                            <div className="fw-bold">PayPal</div>
+                                            <CFormSwitch
+                                                checked={settings.gateways.paypal}
+                                                onChange={(e) => setSettings({
+                                                    ...settings,
+                                                    gateways: { ...settings.gateways, paypal: e.target.checked }
+                                                })}
+                                            />
+                                        </div>
+
+                                        {/* Bank Transfer */}
+                                        <div className="list-group-item d-flex justify-content-between align-items-center">
+                                            <div className="fw-bold">Direct Bank Transfer</div>
+                                            <CFormSwitch
+                                                checked={settings.gateways.bank}
+                                                onChange={(e) => setSettings({
+                                                    ...settings,
+                                                    gateways: { ...settings.gateways, bank: e.target.checked }
+                                                })}
+                                            />
+                                        </div>
+
+                                        {/* Cash on Delivery */}
+                                        <div className="list-group-item d-flex justify-content-between align-items-center">
+                                            <div className="fw-bold">Cash on delivery</div>
+                                            <CFormSwitch
+                                                checked={settings.gateways.cod}
+                                                onChange={(e) => setSettings({
+                                                    ...settings,
+                                                    gateways: { ...settings.gateways, cod: e.target.checked }
+                                                })}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="text-muted small mt-3 px-2">
+                                        <CIcon icon={cilCheckCircle} className="text-success me-1" />
+                                        Active settings will be synchronized with the front-end checkout upon saving.
+                                    </div>
+                                </CTabPane>                                <CTabPane visible={activeTab === 'pos'}>
+>>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
                                     <CAlert color="info" className="d-flex align-items-center">
                                         <div>Point of Sale (POS) integration is active. You can manage your physical terminals here.</div>
                                     </CAlert>
@@ -723,7 +874,108 @@ const StoreSettings = () => {
                                     <CButton color="outline-primary" size="sm">Initialize New Terminal</CButton>
                                 </CTabPane>
 
+                                <CTabPane visible={activeTab === 'advanced'}>
+                                    <h5 className="mb-4">Page Setup</h5>
+                                    <CForm className="row g-3 mb-5 px-3">
+                                        <CRow className="mb-3 align-items-center">
+                                            <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Cart page</CFormLabel>
+                                            <CCol sm={8}>
+                                                <CFormSelect
+                                                    value={settings.advanced.cart_page}
+                                                    onChange={(e) => setSettings({ ...settings, advanced: { ...settings.advanced, cart_page: e.target.value } })}
+                                                >
+                                                    <option value="">Select a page...</option>
+                                                    {pages.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                                                </CFormSelect>
+                                            </CCol>
+                                        </CRow>
+                                        <CRow className="mb-3 align-items-center">
+                                            <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Checkout page</CFormLabel>
+                                            <CCol sm={8}>
+                                                <CFormSelect
+                                                    value={settings.advanced.checkout_page}
+                                                    onChange={(e) => setSettings({ ...settings, advanced: { ...settings.advanced, checkout_page: e.target.value } })}
+                                                >
+                                                    <option value="">Select a page...</option>
+                                                    {pages.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                                                </CFormSelect>
+                                            </CCol>
+                                        </CRow>
+                                        <CRow className="mb-3 align-items-center">
+                                            <CFormLabel className="col-sm-4 text-sm-end fw-semibold">My account page</CFormLabel>
+                                            <CCol sm={8}>
+                                                <CFormSelect
+                                                    value={settings.advanced.myaccount_page}
+                                                    onChange={(e) => setSettings({ ...settings, advanced: { ...settings.advanced, myaccount_page: e.target.value } })}
+                                                >
+                                                    <option value="">Select a page...</option>
+                                                    {pages.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                                                </CFormSelect>
+                                            </CCol>
+                                        </CRow>
+                                        <CRow className="mb-3 align-items-center">
+                                            <CFormLabel className="col-sm-4 text-sm-end fw-semibold">Terms and conditions</CFormLabel>
+                                            <CCol sm={8}>
+                                                <CFormSelect
+                                                    value={settings.advanced.terms_page}
+                                                    onChange={(e) => setSettings({ ...settings, advanced: { ...settings.advanced, terms_page: e.target.value } })}
+                                                >
+                                                    <option value="">Select a page (optional)...</option>
+                                                    {pages.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+                                                </CFormSelect>
+                                            </CCol>
+                                        </CRow>
+                                    </CForm>
+
+                                    <h5 className="mb-4 pt-3 border-top">Checkout Endpoints</h5>
+                                    <p className="small text-muted mb-4 px-3">Endpoints are appended to your page URLs to handle specific actions during the checkout process. They should be unique.</p>
+                                    <CForm className="row g-3 mb-5 px-3">
+                                        {[
+                                            { label: 'Pay', key: 'checkout_pay' },
+                                            { label: 'Order received', key: 'checkout_order_received' },
+                                            { label: 'Add payment method', key: 'add_payment_method' },
+                                            { label: 'Delete payment method', key: 'delete_payment_method' },
+                                            { label: 'Set default payment method', key: 'set_default_payment_method' }
+                                        ].map(item => (
+                                            <CRow className="mb-3 align-items-center" key={item.key}>
+                                                <CFormLabel className="col-sm-4 text-sm-end fw-semibold">{item.label}</CFormLabel>
+                                                <CCol sm={8}>
+                                                    <CFormInput
+                                                        value={settings.advanced[item.key]}
+                                                        onChange={(e) => setSettings({ ...settings, advanced: { ...settings.advanced, [item.key]: e.target.value } })}
+                                                    />
+                                                </CCol>
+                                            </CRow>
+                                        ))}
+                                    </CForm>
+
+                                    <h5 className="mb-4 pt-3 border-top">Account Endpoints</h5>
+                                    <p className="small text-muted mb-4 px-3">Endpoints are appended to your page URLs to handle specific actions on the accounts page. They should be unique.</p>
+                                    <CForm className="row g-3 px-3">
+                                        {[
+                                            { label: 'Orders', key: 'orders' },
+                                            { label: 'View order', key: 'view_order' },
+                                            { label: 'Edit account', key: 'edit_account' },
+                                            { label: 'Edit address', key: 'edit_address' },
+                                            { label: 'Payment methods', key: 'payment_methods' },
+                                            { label: 'Lost password', key: 'lost_password' },
+                                            { label: 'Logout', key: 'customer_logout' }
+                                        ].map(item => (
+                                            <CRow className="mb-3 align-items-center" key={item.key}>
+                                                <CFormLabel className="col-sm-4 text-sm-end fw-semibold">{item.label}</CFormLabel>
+                                                <CCol sm={8}>
+                                                    <CFormInput
+                                                        value={settings.advanced[item.key]}
+                                                        onChange={(e) => setSettings({ ...settings, advanced: { ...settings.advanced, [item.key]: e.target.value } })}
+                                                    />
+                                                </CCol>
+                                            </CRow>
+                                        ))}
+                                    </CForm>
+                                </CTabPane>
+
                                 {/* Fallback for other tabs */}
+<<<<<<< HEAD
                                 {!['general', 'products', 'tax', 'pos', 'shipping'].includes(activeTab) && (
                                     <CTabPane visible>
                                         <div className="text-center py-5">
@@ -733,6 +985,15 @@ const StoreSettings = () => {
                                             </CButton>
                                         </div>
                                     </CTabPane>
+=======
+                                {!['general', 'products', 'tax', 'payments', 'pos', 'shipping', 'advanced'].includes(activeTab) && (
+                                    <div className="text-center py-5">
+                                        <div className="text-muted mb-3">Settings for <strong>{tabs.find(t => t.id === activeTab)?.name}</strong> are being synchronized with your WordPress site.</div>
+                                        <CButton color="primary" variant="outline" size="sm" onClick={fetchRemoteConfig} disabled={isFetching}>
+                                            {isFetching ? <CSpinner size="sm" /> : <><CIcon icon={cilReload} className="me-1" /> Fetch Remote Config</>}
+                                        </CButton>
+                                    </div>
+>>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
                                 )}
                             </CTabContent>
                         </div>

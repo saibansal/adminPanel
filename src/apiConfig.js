@@ -6,6 +6,7 @@
  */
 
 const API_CONFIG = {
+<<<<<<< HEAD
   // Use Vercel Environment Variables or fallback to Local Sync
   BASE_URL: import.meta.env.VITE_API_URL || 'https://dev.vismaad.com/estore/wp-json/',
 
@@ -17,6 +18,10 @@ const API_CONFIG = {
   //   "user_display_name": "admin"
   // }
 
+=======
+  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost/wordpress/wordpress-backend/wp-json/',
+  FRONTEND_URL: import.meta.env.VITE_FRONTEND_URL || 'http://localhost/estore/frontend/',
+>>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
 
   CONSUMER_KEY: import.meta.env.VITE_CONSUMER_KEY || 'ck_2e385c7db77c3e2afab7ac9df70378c7a29e4df1',
   CONSUMER_SECRET: import.meta.env.VITE_CONSUMER_SECRET || 'cs_e1992fe48b1f17ac2cc19da72cb0b121d77a6905',

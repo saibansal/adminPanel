@@ -46,7 +46,13 @@ const AllPosts = () => {
   const fetchPosts = async () => {
     setLoading(true)
     setError(null)
+    
+    let allData = []
+    let pageNum = 1
+    let totalPages = 1
+
     try {
+<<<<<<< HEAD
       // Use Basic Auth (ck/cs) as it is more reliable in this environment,
       // and we have a bridge in functions.php to allow it for core endpoints.
       const authHeader = API_CONFIG.getBasicAuthHeader()
@@ -64,9 +70,26 @@ const AllPosts = () => {
         const errorMessage = errorData.message || `Failed to fetch posts (${response.status})`
         throw new Error(errorMessage)
       }
+=======
+      const headers = { 'Authorization': API_CONFIG.getJWTHeader() }
+      do {
+        const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts?status=publish,draft,pending,private,future&_embed&per_page=100&page=${pageNum}`, {
+          headers
+        })
 
-      const data = await response.json()
-      setPosts(data)
+        if (!response.ok) {
+          throw new Error(`Failed to fetch posts (Page ${pageNum})`)
+        }
+>>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
+
+        const data = await response.json()
+        allData = [...allData, ...data]
+        
+        totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '1')
+        pageNum++
+      } while (pageNum <= totalPages)
+
+      setPosts(allData)
     } catch (err) {
       console.error('Fetch error:', err)
       setError(err.message)
@@ -80,15 +103,18 @@ const AllPosts = () => {
   }
 
   const confirmDeletePost = async () => {
-    const id = deleteConfirm.id
-    setDeleteConfirm({ visible: false, id: null })
-    setProcessingId(id)
     try {
+      setProcessingId(id)
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts/${id}`, {
         method: 'DELETE',
         headers: {
+<<<<<<< HEAD
           'Authorization': API_CONFIG.getBasicAuthHeader(),
         },
+=======
+          'Authorization': API_CONFIG.getJWTHeader()
+        }
+>>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
       })
 
       if (response.ok) {

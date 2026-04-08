@@ -4,11 +4,11 @@ import { CFooter } from '@coreui/react'
 const AppFooter = () => {
   return (
     <CFooter className="px-4">
-      <div>
+      <div>&copy; 2026 &nbsp;
         <a href="#" target="_blank" rel="noopener noreferrer">
-          Vismaad INC
+          Vismaad Inc
         </a>
-        <span className="ms-1">&copy; 2025 creativeLabs.</span>
+        {/* <span className="ms-1">.</span> */}
       </div>
       <div className="ms-auto">
         <span className="me-1">Powered by</span>
