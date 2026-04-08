@@ -57,12 +57,8 @@ const StoreSettings = () => {
         enableStock: true,
         lowStockThreshold: 2,
         outOfStockThreshold: 0,
-<<<<<<< HEAD
         storeAddress: '',
-        city: ''
-=======
-        storeAddress: '123 Commerce St',
-        city: 'New York',
+        city: '',
         gateways: {
             paypal: false,
             bank: false,
@@ -89,7 +85,6 @@ const StoreSettings = () => {
             lost_password: 'lost-password',
             customer_logout: 'customer-logout'
         }
->>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
     })
     const [errorMsg, setErrorMsg] = useState(null)
 
@@ -108,12 +103,7 @@ const StoreSettings = () => {
 
     const handleSave = async () => {
         setIsSaving(true)
-<<<<<<< HEAD
-        // Synchronize with front-end Checkout
-        localStorage.setItem('wc_store_settings', JSON.stringify(settings))
-=======
         const authHeader = API_CONFIG.getBasicAuthHeader()
->>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
 
         try {
             if (activeTab === 'advanced') {
@@ -611,262 +601,7 @@ const StoreSettings = () => {
                                     )}
                                 </CTabPane>
 
-                                {/* Modal for Adding/Editing Shipping Zone */}
-                                <CModal visible={showAddZoneModal} onClose={() => {
-                                    setShowAddZoneModal(false);
-                                    setEditingZone(null);
-                                    setNewZoneName('');
-                                    setZoneRegions([]);
-                                    setZoneMethods([]);
-                                }} size="lg">
-                                    <CModalHeader>
-                                        <CModalTitle>{editingZone ? `Edit Shipping Zone: ${editingZone.name}` : 'Add shipping zone'}</CModalTitle>
-                                    </CModalHeader>
-                                    <CModalBody>
-                                        <CRow className="g-3 mb-4">
-                                            <CCol md={12}>
-                                                <CFormLabel className="fw-bold">Zone Name</CFormLabel>
-                                                <CFormInput
-                                                    placeholder="e.g. Domestic / California"
-                                                    value={newZoneName}
-                                                    onChange={(e) => setNewZoneName(e.target.value)}
-                                                    required
-                                                />
-                                                <div className="text-muted small mt-1">Provide a descriptive name for this zone.</div>
-                                            </CCol>
-                                            <CCol md={12}>
-                                                <CFormLabel className="fw-bold">Zone Regions</CFormLabel>
-
-                                                {/* Searchable Checkbox List */}
-                                                <CFormInput
-                                                    placeholder="Search countries or states..."
-                                                    className="mb-2 shadow-sm"
-                                                    value={regionSearch}
-                                                    onChange={(e) => setRegionSearch(e.target.value)}
-                                                />
-
-                                                <div className="border rounded bg-white overflow-auto mb-2 px-0 py-0 shadow-sm" style={{ maxHeight: '350px' }}>
-                                                    {allCountries.length === 0 ? (
-                                                        <div className="text-center py-5 text-muted">
-                                                            <CSpinner size="sm" className="me-2" /> Loading locations...
-                                                        </div>
-                                                    ) : (() => {
-                                                        const search = regionSearch.toLowerCase();
-                                                        return allCountries.map(country => {
-                                                            const matchedStates = (country.states || []).filter(s => s.name.toLowerCase().includes(search));
-                                                            const countryMatches = country.name.toLowerCase().includes(search);
-
-                                                            if (!countryMatches && matchedStates.length === 0) return null; const isExpanded = expandedCountries.includes(country.code) || (search && matchedStates.length > 0);
-
-                                                            return (
-                                                                <div key={country.code} className="border-bottom last-child-border-0">
-                                                                    <div className="bg-light px-2 py-2 d-flex align-items-center sticky-top shadow-sm border-bottom" style={{ top: 0, zIndex: 1 }}>
-                                                                        <div
-                                                                            className="me-1 cursor-pointer hover-bg-gray rounded"
-                                                                            style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                            onClick={() => {
-                                                                                setExpandedCountries(prev =>
-                                                                                    prev.includes(country.code)
-                                                                                        ? prev.filter(c => c !== country.code)
-                                                                                        : [...prev, country.code]
-                                                                                );
-                                                                            }}
-                                                                        >
-                                                                            <CIcon
-                                                                                icon={isExpanded ? cilChevronBottom : cilChevronRight}
-                                                                                size="sm"
-                                                                                className="text-muted"
-                                                                            />
-                                                                        </div>
-                                                                        <CFormCheck
-                                                                            id={`zone-reg-${country.code}`}
-                                                                            checked={zoneRegions.some(r => r.code === country.code)}
-                                                                            onChange={(e) => {
-                                                                                const newReg = e.target.checked
-                                                                                    ? [...zoneRegions, { code: country.code, type: 'country' }]
-                                                                                    : zoneRegions.filter(r => r.code !== country.code);
-                                                                                setZoneRegions(newReg);
-                                                                            }}
-                                                                        />
-                                                                        <label htmlFor={`zone-reg-${country.code}`} className="ms-2 mb-0 fw-bold small text-dark d-flex justify-content-between w-100 cursor-pointer">
-                                                                            <span>{country.name}</span>
-                                                                            <CBadge color="primary" size="sm" shape="rounded-pill" style={{ opacity: 0.6, fontSize: '9px' }}>{country.states?.length || 0} STATES</CBadge>
-                                                                        </label>
-                                                                    </div>
-                                                                    {isExpanded && (
-                                                                        <div className="py-1 bg-white">
-                                                                            {(matchedStates.length > 0 ? matchedStates : (regionSearch ? [] : (country.states || []))).map(state => {
-                                                                                const stateCode = `${country.code}:${state.code}`;
-                                                                                return (
-                                                                                    <div key={stateCode} className="d-flex align-items-center py-1 px-4 ms-4 hover-bg-light rounded">
-                                                                                        <CFormCheck
-                                                                                            id={`zone-reg-${stateCode}`}
-                                                                                            checked={zoneRegions.some(r => r.code === stateCode)}
-                                                                                            onChange={(e) => {
-                                                                                                const newReg = e.target.checked
-                                                                                                    ? [...zoneRegions, { code: stateCode, type: 'state' }]
-                                                                                                    : zoneRegions.filter(r => r.code !== stateCode);
-                                                                                                setZoneRegions(newReg);
-                                                                                            }}
-                                                                                        />
-                                                                                        <label htmlFor={`zone-reg-${stateCode}`} className="ms-2 mb-0 small text-muted d-flex justify-content-between w-100 cursor-pointer">
-                                                                                            <span>{state.name}</span>
-                                                                                        </label>
-                                                                                    </div>
-                                                                                );
-                                                                            })}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            );
-                                                            ;
-                                                        });
-                                                    })()}
-                                                </div>
-                                                <div className="text-muted d-flex justify-content-between small px-1">
-                                                    <span>Selected: {zoneRegions.length} regions</span>
-                                                    <CButton variant="ghost" size="sm" className="p-0 text-primary" onClick={() => setZoneRegions([])}>Clear all</CButton>
-                                                </div>
-                                            </CCol>
-                                        </CRow>
-
-                                        <hr className="my-4 opacity-10" />
-
-                                        <div className="d-flex justify-content-between align-items-center mb-3">
-                                            <h6 className="mb-0 fw-bold">Shipping Methods</h6>
-                                            <CButton color="outline-primary" size="sm" onClick={() => setShowAddMethodForm(true)}>Add method</CButton>
-                                        </div>
-
-                                        {showAddMethodForm && (
-                                            <CCard className="mb-3 border-primary bg-light">
-                                                <CCardBody className="p-3">
-                                                    <div className="d-flex gap-2 align-items-end">
-                                                        <div className="flex-grow-1">
-                                                            <CFormLabel className="small">Select method</CFormLabel>
-                                                            <CFormSelect id="new-method-type" defaultValue="flat_rate">
-                                                                <option value="flat_rate">Flat Rate</option>
-                                                                <option value="free_shipping">Free Shipping</option>
-                                                                <option value="local_pickup">Local Pickup</option>
-                                                            </CFormSelect>
-                                                        </div>
-                                                        <CButton color="primary" size="sm" onClick={() => {
-                                                            const type = document.getElementById('new-method-type').value;
-                                                            const methodNames = {
-                                                                flat_rate: 'Flat rate',
-                                                                free_shipping: 'Free shipping',
-                                                                local_pickup: 'Local pickup'
-                                                            };
-                                                            setZoneMethods([...zoneMethods, {
-                                                                id: Date.now(),
-                                                                method_id: type,
-                                                                title: methodNames[type],
-                                                                enabled: true,
-                                                                settings: { cost: '0' }
-                                                            }]);
-                                                            setShowAddMethodForm(false);
-                                                        }}>Add</CButton>
-                                                        <CButton color="secondary" variant="ghost" size="sm" onClick={() => setShowAddMethodForm(false)}>Cancel</CButton>
-                                                    </div>
-                                                </CCardBody>
-                                            </CCard>
-                                        )}
-
-                                        <CTable align="middle" className="mb-0 border small" hover>
-                                            <CTableHead color="light">
-                                                <CTableRow>
-                                                    <CTableHeaderCell>Title</CTableHeaderCell>
-                                                    <CTableHeaderCell>Enabled</CTableHeaderCell>
-                                                    <CTableHeaderCell>Description</CTableHeaderCell>
-                                                    <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
-                                                </CTableRow>
-                                            </CTableHead>
-                                            <CTableBody>
-                                                {zoneMethods.map((m, idx) => (
-                                                    <CTableRow key={m.id || idx}>
-                                                        <CTableDataCell className="fw-bold">{m.title}</CTableDataCell>
-                                                        <CTableDataCell>
-                                                            <CFormSwitch checked={m.enabled} onChange={(e) => {
-                                                                const newMethods = [...zoneMethods];
-                                                                newMethods[idx].enabled = e.target.checked;
-                                                                setZoneMethods(newMethods);
-                                                            }} />
-                                                        </CTableDataCell>
-                                                        <CTableDataCell className="text-muted">
-                                                            {m.method_id === 'flat_rate' ? `Cost: ${m.settings?.cost || '0'}` : 'N/A'}
-                                                        </CTableDataCell>
-                                                        <CTableDataCell className="text-end">
-                                                            <CButton color="danger" variant="ghost" size="sm" onClick={() => {
-                                                                setZoneMethods(zoneMethods.filter((_, i) => i !== idx));
-                                                            }}>Remove</CButton>
-                                                        </CTableDataCell>
-                                                    </CTableRow>
-                                                ))}
-                                                {zoneMethods.length === 0 && (
-                                                    <CTableRow>
-                                                        <CTableDataCell colSpan={4} className="text-center py-3 text-muted">
-                                                            No shipping methods added to this zone.
-                                                        </CTableDataCell>
-                                                    </CTableRow>
-                                                )}
-                                            </CTableBody>
-                                        </CTable>
-                                    </CModalBody>
-                                    <CModalFooter>
-                                        <CButton color="secondary" onClick={() => setShowAddZoneModal(false)}>Cancel</CButton>
-                                        <CButton color="primary" onClick={handleAddZone} disabled={isSaving || !newZoneName}>
-                                            {isSaving ? <CSpinner size="sm" /> : 'Save changes'}
-                                        </CButton>
-                                    </CModalFooter>
-                                </CModal>
-
-<<<<<<< HEAD
                                 <CTabPane visible={activeTab === 'pos'}>
-=======
-                                <CTabPane visible={activeTab === 'payments'}>
-                                    <h5 className="mb-4">Payment Gateways</h5>
-                                    <div className="list-group list-group-flush border rounded overflow-hidden">
-                                        {/* PayPal */}
-                                        <div className="list-group-item d-flex justify-content-between align-items-center">
-                                            <div className="fw-bold">PayPal</div>
-                                            <CFormSwitch
-                                                checked={settings.gateways.paypal}
-                                                onChange={(e) => setSettings({
-                                                    ...settings,
-                                                    gateways: { ...settings.gateways, paypal: e.target.checked }
-                                                })}
-                                            />
-                                        </div>
-
-                                        {/* Bank Transfer */}
-                                        <div className="list-group-item d-flex justify-content-between align-items-center">
-                                            <div className="fw-bold">Direct Bank Transfer</div>
-                                            <CFormSwitch
-                                                checked={settings.gateways.bank}
-                                                onChange={(e) => setSettings({
-                                                    ...settings,
-                                                    gateways: { ...settings.gateways, bank: e.target.checked }
-                                                })}
-                                            />
-                                        </div>
-
-                                        {/* Cash on Delivery */}
-                                        <div className="list-group-item d-flex justify-content-between align-items-center">
-                                            <div className="fw-bold">Cash on delivery</div>
-                                            <CFormSwitch
-                                                checked={settings.gateways.cod}
-                                                onChange={(e) => setSettings({
-                                                    ...settings,
-                                                    gateways: { ...settings.gateways, cod: e.target.checked }
-                                                })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="text-muted small mt-3 px-2">
-                                        <CIcon icon={cilCheckCircle} className="text-success me-1" />
-                                        Active settings will be synchronized with the front-end checkout upon saving.
-                                    </div>
-                                </CTabPane>                                <CTabPane visible={activeTab === 'pos'}>
->>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
                                     <CAlert color="info" className="d-flex align-items-center">
                                         <div>Point of Sale (POS) integration is active. You can manage your physical terminals here.</div>
                                     </CAlert>
@@ -975,8 +710,7 @@ const StoreSettings = () => {
                                 </CTabPane>
 
                                 {/* Fallback for other tabs */}
-<<<<<<< HEAD
-                                {!['general', 'products', 'tax', 'pos', 'shipping'].includes(activeTab) && (
+                                {!['general', 'products', 'tax', 'pos', 'shipping', 'advanced'].includes(activeTab) && (
                                     <CTabPane visible>
                                         <div className="text-center py-5">
                                             <div className="text-muted mb-3">Settings for <strong>{tabs.find(t => t.id === activeTab)?.name}</strong> are being synchronized with your WordPress site.</div>
@@ -985,20 +719,220 @@ const StoreSettings = () => {
                                             </CButton>
                                         </div>
                                     </CTabPane>
-=======
-                                {!['general', 'products', 'tax', 'payments', 'pos', 'shipping', 'advanced'].includes(activeTab) && (
-                                    <div className="text-center py-5">
-                                        <div className="text-muted mb-3">Settings for <strong>{tabs.find(t => t.id === activeTab)?.name}</strong> are being synchronized with your WordPress site.</div>
-                                        <CButton color="primary" variant="outline" size="sm" onClick={fetchRemoteConfig} disabled={isFetching}>
-                                            {isFetching ? <CSpinner size="sm" /> : <><CIcon icon={cilReload} className="me-1" /> Fetch Remote Config</>}
-                                        </CButton>
-                                    </div>
->>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
                                 )}
                             </CTabContent>
                         </div>
                     </CCardBody>
                 </CCard>
+
+                {/* Modal for Adding/Editing Shipping Zone */}
+                <CModal visible={showAddZoneModal} onClose={() => {
+                    setShowAddZoneModal(false);
+                    setEditingZone(null);
+                    setNewZoneName('');
+                    setZoneRegions([]);
+                    setZoneMethods([]);
+                }} size="lg">
+                    <CModalHeader>
+                        <CModalTitle>{editingZone ? `Edit Shipping Zone: ${editingZone.name}` : 'Add shipping zone'}</CModalTitle>
+                    </CModalHeader>
+                    <CModalBody>
+                        <CRow className="g-3 mb-4">
+                            <CCol md={12}>
+                                <CFormLabel className="fw-bold">Zone Name</CFormLabel>
+                                <CFormInput
+                                    placeholder="e.g. Domestic / California"
+                                    value={newZoneName}
+                                    onChange={(e) => setNewZoneName(e.target.value)}
+                                    required
+                                />
+                                <div className="text-muted small mt-1">Provide a descriptive name for this zone.</div>
+                            </CCol>
+                            <CCol md={12}>
+                                <CFormLabel className="fw-bold">Zone Regions</CFormLabel>
+
+                                {/* Searchable Checkbox List */}
+                                <CFormInput
+                                    placeholder="Search countries or states..."
+                                    className="mb-2 shadow-sm"
+                                    value={regionSearch}
+                                    onChange={(e) => setRegionSearch(e.target.value)}
+                                />
+
+                                <div className="border rounded bg-white overflow-auto mb-2 px-0 py-0 shadow-sm" style={{ maxHeight: '350px' }}>
+                                    {allCountries.length === 0 ? (
+                                        <div className="text-center py-5 text-muted">
+                                            <CSpinner size="sm" className="me-2" /> Loading locations...
+                                        </div>
+                                    ) : (() => {
+                                        const search = regionSearch.toLowerCase();
+                                        return allCountries.map(country => {
+                                            const matchedStates = (country.states || []).filter(s => s.name.toLowerCase().includes(search));
+                                            const countryMatches = country.name.toLowerCase().includes(search);
+
+                                            if (!countryMatches && matchedStates.length === 0) return null;
+
+                                            const isExpanded = expandedCountries.includes(country.code) || (search && matchedStates.length > 0);
+
+                                            return (
+                                                <div key={country.code} className="border-bottom last-child-border-0">
+                                                    <div className="bg-light px-2 py-2 d-flex align-items-center sticky-top shadow-sm border-bottom" style={{ top: 0, zIndex: 1 }}>
+                                                        <div
+                                                            className="me-1 cursor-pointer hover-bg-gray rounded"
+                                                            style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                            onClick={() => {
+                                                                setExpandedCountries(prev =>
+                                                                    prev.includes(country.code)
+                                                                        ? prev.filter(c => c !== country.code)
+                                                                        : [...prev, country.code]
+                                                                );
+                                                            }}
+                                                        >
+                                                            <CIcon
+                                                                icon={isExpanded ? cilChevronBottom : cilChevronRight}
+                                                                size="sm"
+                                                                className="text-muted"
+                                                            />
+                                                        </div>
+                                                        <CFormCheck
+                                                            id={`zone-reg-${country.code}`}
+                                                            checked={zoneRegions.some(r => r.code === country.code)}
+                                                            onChange={(e) => {
+                                                                const newReg = e.target.checked
+                                                                    ? [...zoneRegions, { code: country.code, type: 'country' }]
+                                                                    : zoneRegions.filter(r => r.code !== country.code);
+                                                                setZoneRegions(newReg);
+                                                            }}
+                                                        />
+                                                        <label htmlFor={`zone-reg-${country.code}`} className="ms-2 mb-0 fw-bold small text-dark d-flex justify-content-between w-100 cursor-pointer">
+                                                            <span>{country.name}</span>
+                                                            <CBadge color="primary" size="sm" shape="rounded-pill" style={{ opacity: 0.6, fontSize: '9px' }}>{country.states?.length || 0} STATES</CBadge>
+                                                        </label>
+                                                    </div>
+                                                    {isExpanded && (
+                                                        <div className="py-1 bg-white">
+                                                            {(matchedStates.length > 0 ? matchedStates : (regionSearch ? [] : (country.states || []))).map(state => {
+                                                                const stateCode = `${country.code}:${state.code}`;
+                                                                return (
+                                                                    <div key={stateCode} className="d-flex align-items-center py-1 px-4 ms-4 hover-bg-light rounded">
+                                                                        <CFormCheck
+                                                                            id={`zone-reg-${stateCode}`}
+                                                                            checked={zoneRegions.some(r => r.code === stateCode)}
+                                                                            onChange={(e) => {
+                                                                                const newReg = e.target.checked
+                                                                                    ? [...zoneRegions, { code: stateCode, type: 'state' }]
+                                                                                    : zoneRegions.filter(r => r.code !== stateCode);
+                                                                                setZoneRegions(newReg);
+                                                                            }}
+                                                                        />
+                                                                        <label htmlFor={`zone-reg-${stateCode}`} className="ms-2 mb-0 small text-muted d-flex justify-content-between w-100 cursor-pointer">
+                                                                            <span>{state.name}</span>
+                                                                        </label>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        });
+                                    })()}
+                                </div>
+                                <div className="text-muted d-flex justify-content-between small px-1">
+                                    <span>Selected: {zoneRegions.length} regions</span>
+                                    <CButton variant="ghost" size="sm" className="p-0 text-primary" onClick={() => setZoneRegions([])}>Clear all</CButton>
+                                </div>
+                            </CCol>
+                        </CRow>
+
+                        <hr className="my-4 opacity-10" />
+
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                            <h6 className="mb-0 fw-bold">Shipping Methods</h6>
+                            <CButton color="outline-primary" size="sm" onClick={() => setShowAddMethodForm(true)}>Add method</CButton>
+                        </div>
+
+                        {showAddMethodForm && (
+                            <CCard className="mb-3 border-primary bg-light">
+                                <CCardBody className="p-3">
+                                    <div className="d-flex gap-2 align-items-end">
+                                        <div className="flex-grow-1">
+                                            <CFormLabel className="small">Select method</CFormLabel>
+                                            <CFormSelect id="new-method-type" defaultValue="flat_rate">
+                                                <option value="flat_rate">Flat Rate</option>
+                                                <option value="free_shipping">Free Shipping</option>
+                                                <option value="local_pickup">Local Pickup</option>
+                                            </CFormSelect>
+                                        </div>
+                                        <CButton color="primary" size="sm" onClick={() => {
+                                            const type = document.getElementById('new-method-type').value;
+                                            const methodNames = {
+                                                flat_rate: 'Flat rate',
+                                                free_shipping: 'Free shipping',
+                                                local_pickup: 'Local pickup'
+                                            };
+                                            setZoneMethods([...zoneMethods, {
+                                                id: Date.now(),
+                                                method_id: type,
+                                                title: methodNames[type],
+                                                enabled: true,
+                                                settings: { cost: '0' }
+                                            }]);
+                                            setShowAddMethodForm(false);
+                                        }}>Add</CButton>
+                                        <CButton color="secondary" variant="ghost" size="sm" onClick={() => setShowAddMethodForm(false)}>Cancel</CButton>
+                                    </div>
+                                </CCardBody>
+                            </CCard>
+                        )}
+
+                        <CTable align="middle" className="mb-0 border small" hover>
+                            <CTableHead color="light">
+                                <CTableRow>
+                                    <CTableHeaderCell>Title</CTableHeaderCell>
+                                    <CTableHeaderCell>Enabled</CTableHeaderCell>
+                                    <CTableHeaderCell>Description</CTableHeaderCell>
+                                    <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
+                                </CTableRow>
+                            </CTableHead>
+                            <CTableBody>
+                                {zoneMethods.map((m, idx) => (
+                                    <CTableRow key={m.id || idx}>
+                                        <CTableDataCell className="fw-bold">{m.title}</CTableDataCell>
+                                        <CTableDataCell>
+                                            <CFormSwitch checked={m.enabled} onChange={(e) => {
+                                                const newMethods = [...zoneMethods];
+                                                newMethods[idx].enabled = e.target.checked;
+                                                setZoneMethods(newMethods);
+                                            }} />
+                                        </CTableDataCell>
+                                        <CTableDataCell className="text-muted">
+                                            {m.method_id === 'flat_rate' ? `Cost: ${m.settings?.cost || '0'}` : 'N/A'}
+                                        </CTableDataCell>
+                                        <CTableDataCell className="text-end">
+                                            <CButton color="danger" variant="ghost" size="sm" onClick={() => {
+                                                setZoneMethods(zoneMethods.filter((_, i) => i !== idx));
+                                            }}>Remove</CButton>
+                                        </CTableDataCell>
+                                    </CTableRow>
+                                ))}
+                                {zoneMethods.length === 0 && (
+                                    <CTableRow>
+                                        <CTableDataCell colSpan={4} className="text-center py-3 text-muted">
+                                            No shipping methods added to this zone.
+                                        </CTableDataCell>
+                                    </CTableRow>
+                                )}
+                            </CTableBody>
+                        </CTable>
+                    </CModalBody>
+                    <CModalFooter>
+                        <CButton color="secondary" onClick={() => setShowAddZoneModal(false)}>Cancel</CButton>
+                        <CButton color="primary" onClick={handleAddZone} disabled={isSaving || !newZoneName}>
+                            {isSaving ? <CSpinner size="sm" /> : 'Save changes'}
+                        </CButton>
+                    </CModalFooter>
+                </CModal>
             </CCol>
         </CRow>
     )

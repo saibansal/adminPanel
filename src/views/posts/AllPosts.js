@@ -52,35 +52,21 @@ const AllPosts = () => {
     let totalPages = 1
 
     try {
-<<<<<<< HEAD
-      // Use Basic Auth (ck/cs) as it is more reliable in this environment,
-      // and we have a bridge in functions.php to allow it for core endpoints.
       const authHeader = API_CONFIG.getBasicAuthHeader()
       const headers = {
         'Content-Type': 'application/json',
         'Authorization': authHeader,
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts?status=publish,draft,pending,private,future&_embed`, {
-        headers: headers,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.message || `Failed to fetch posts (${response.status})`
-        throw new Error(errorMessage)
-      }
-=======
-      const headers = { 'Authorization': API_CONFIG.getJWTHeader() }
       do {
         const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts?status=publish,draft,pending,private,future&_embed&per_page=100&page=${pageNum}`, {
           headers
         })
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch posts (Page ${pageNum})`)
+          const errorData = await response.json().catch(() => ({}))
+          throw new Error(errorData.message || `Failed to fetch posts (Page ${pageNum})`)
         }
->>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
 
         const data = await response.json()
         allData = [...allData, ...data]
@@ -108,13 +94,8 @@ const AllPosts = () => {
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts/${id}`, {
         method: 'DELETE',
         headers: {
-<<<<<<< HEAD
           'Authorization': API_CONFIG.getBasicAuthHeader(),
         },
-=======
-          'Authorization': API_CONFIG.getJWTHeader()
-        }
->>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
       })
 
       if (response.ok) {

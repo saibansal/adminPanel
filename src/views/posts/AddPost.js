@@ -56,14 +56,10 @@ const AddPost = () => {
       const headers = { 'Content-Type': 'application/json', 'Authorization': API_CONFIG.getJWTHeader() }
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/categories`, {
         method: 'POST',
-<<<<<<< HEAD
         headers: {
           'Content-Type': 'application/json',
           'Authorization': API_CONFIG.getBasicAuthHeader()
         },
-=======
-        headers,
->>>>>>> a00c0a5d408c7a47a227656e62dea81ad2cefd91
         body: JSON.stringify({
           name: newCatName,
           parent: parseInt(parentCat)
