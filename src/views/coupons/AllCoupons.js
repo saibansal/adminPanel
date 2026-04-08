@@ -42,6 +42,8 @@ const AllCoupons = () => {
     setStatusModal({ visible: true, title, message, color })
   }
 
+  const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+
   const fetchCoupons = async () => {
     setLoading(true)
     setError(null)
@@ -71,7 +73,6 @@ const AllCoupons = () => {
     const id = deleteConfirm.id
     setDeleteConfirm({ visible: false, id: null })
     setLoading(true)
-    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
     try {
       const forceParam = currentTab === 'trash' ? 'force=true' : 'force=false'
       const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/coupons/${id}?${forceParam}&${authParams}`, {
@@ -92,7 +93,6 @@ const AllCoupons = () => {
 
   const handleRestoreCoupon = async (id) => {
     setLoading(true)
-    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/coupons/${id}?${authParams}`, {
         method: 'PUT',
@@ -116,7 +116,6 @@ const AllCoupons = () => {
   const handleToggleStatus = async (coupon) => {
     const newStatus = coupon.status === 'publish' ? 'draft' : 'publish'
     setLoading(true)
-    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/coupons/${coupon.id}?${authParams}`, {
         method: 'PUT',
