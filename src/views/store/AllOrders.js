@@ -51,39 +51,57 @@ const AllOrders = () => {
   const [processingId, setProcessingId] = useState(null)
   const [statusModal, setStatusModal] = useState({ visible: false, title: '', message: '', color: 'primary' })
   const [deleteConfirm, setDeleteConfirm] = useState({ visible: false, id: null })
+  const [selectedIds, setSelectedIds] = useState([])
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false)
 
   const showStatus = (title, message, color = 'primary') => {
     setStatusModal({ visible: true, title, message, color })
   }
 
-  // Synchronize with WooCommerce REST API
+  // Fetch ALL orders from WooCommerce using pagination
   const fetchOrders = async () => {
     setLoading(true)
     try {
       const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
-      const response = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders?${authParams}`, {
-        headers: {
-          'Content-Type': 'application/json'
+      const PER_PAGE = 100 // Max allowed by WooCommerce API
+      let allOrders = []
+      let page = 1
+      let hasMore = true
+
+      while (hasMore) {
+        const response = await fetch(
+          `${API_CONFIG.BASE_URL}wc/v3/orders?${authParams}&per_page=${PER_PAGE}&page=${page}&orderby=id&order=desc`,
+          { headers: { 'Content-Type': 'application/json' } }
+        )
+        if (!response.ok) throw new Error('Failed to synchronize with WooCommerce API')
+
+        const data = await response.json()
+        if (data.length === 0) {
+          hasMore = false
+        } else {
+          allOrders = [...allOrders, ...data]
+          // If we got fewer than PER_PAGE, we've reached the last page
+          if (data.length < PER_PAGE) hasMore = false
+          else page++
         }
-      })
-      if (!response.ok) throw new Error('Failed to synchronize with WooCommerce API')
-      const data = await response.json()
+      }
 
       // Transform API data to local UI format
-      const transformed = data.map(o => ({
+      const transformed = allOrders.map(o => ({
         id: `#${o.id}`,
         db_id: o.id,
-        customer: o.billing ? `${o.billing.first_name || ''} ${o.billing.last_name || ''}`.trim() : 'Anonymous',
+        customer: o.billing ? `${o.billing.first_name || ''} ${o.billing.last_name || ''}`.trim() || 'Anonymous' : 'Anonymous',
+        email: o.billing?.email || '',
         date: o.date_created ? o.date_created.split('T')[0] : 'N/A',
-        total: `${o.currency_symbol || '$'}${o.total}`,
-        status: o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).replace('-', ' ') : 'Unknown',
+        total: `${o.currency_symbol || '₹'}${o.total}`,
+        status: o.status ? o.status.charAt(0).toUpperCase() + o.status.slice(1).replace(/-/g, ' ') : 'Unknown',
         raw: o
       }))
       setOrders(transformed)
       setError(null)
     } catch (err) {
       setError(`Sync Failed: ${err.message}`)
-      setOrders([]) // Ensure no stale/dummy data is shown
+      setOrders([])
     } finally {
       setLoading(false)
     }
@@ -91,6 +109,11 @@ const AllOrders = () => {
 
   useEffect(() => {
     fetchOrders()
+
+    // Refetch automatically whenever user switches back to this browser tab
+    const handleFocus = () => fetchOrders()
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
   const handleUpdateStatus = async (db_id, newStatus) => {
@@ -149,6 +172,30 @@ const AllOrders = () => {
   const handleViewDetails = (order) => {
     setSelectedOrder(order)
     setShowViewModal(true)
+  }
+
+  const handleBulkDelete = async () => {
+    setBulkDeleteConfirm(false)
+    setLoading(true)
+    const authParams = `consumer_key=${API_CONFIG.CONSUMER_KEY}&consumer_secret=${API_CONFIG.CONSUMER_SECRET}`
+    let successCount = 0
+    try {
+      await Promise.all(
+        selectedIds.map(async (db_id) => {
+          const res = await fetch(`${API_CONFIG.BASE_URL}wc/v3/orders/${db_id}?force=true&${authParams}`, {
+            method: 'DELETE'
+          })
+          if (res.ok) successCount++
+        })
+      )
+      setOrders(orders.filter(o => !selectedIds.includes(o.db_id)))
+      setSelectedIds([])
+      showStatus('Bulk Delete', `${successCount} of ${selectedIds.length} orders deleted permanently.`, 'success')
+    } catch (err) {
+      showStatus('Error', 'Some orders could not be deleted.', 'danger')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const getStatusBadge = (status) => {
@@ -243,6 +290,7 @@ const AllOrders = () => {
             <div className="fw-bold fs-5 text-dark">
               <CIcon icon={cilBasket} className="me-2 text-primary" />
               Orders
+              <CBadge color="primary" className="ms-2">{orders.length}</CBadge>
               <CButton variant="ghost" size="sm" className="ms-2 p-0 text-muted" onClick={fetchOrders} title="Refresh Sync">
                 <CIcon icon={cilCloudDownload} size="sm" />
               </CButton>
@@ -259,11 +307,28 @@ const AllOrders = () => {
             </div>
           </CCardHeader>
           <CCardBody>
-            <div className="mb-4 d-flex justify-content-between">
-              <CInputGroup className="w-25">
-                <CInputGroupText><CIcon icon={cilSearch} /></CInputGroupText>
-                <CFormInput placeholder="Search records..." />
-              </CInputGroup>
+            <div className="mb-4 d-flex justify-content-between align-items-center">
+              <div className="d-flex align-items-center gap-3">
+                <CInputGroup className="w-auto">
+                  <CInputGroupText><CIcon icon={cilSearch} /></CInputGroupText>
+                  <CFormInput placeholder="Search records..." style={{ minWidth: '180px' }} />
+                </CInputGroup>
+                {selectedIds.length > 0 && (
+                  <>
+                    <CBadge color="primary" shape="rounded-pill" className="px-3 py-2">
+                      {selectedIds.length} selected
+                    </CBadge>
+                    <CButton
+                      color="danger"
+                      size="sm"
+                      onClick={() => setBulkDeleteConfirm(true)}
+                    >
+                      <CIcon icon={cilTrash} className="me-1" />
+                      Delete Selected ({selectedIds.length})
+                    </CButton>
+                  </>
+                )}
+              </div>
               <div className="d-flex gap-2 align-items-center text-muted small">
                 Filter:
                 <CBadge color="light" shape="rounded-pill" className="text-dark border cursor-pointer">All</CBadge>
@@ -277,6 +342,21 @@ const AllOrders = () => {
               <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead className="text-nowrap">
                   <CTableRow>
+                    <CTableHeaderCell className="bg-body-tertiary" style={{ width: '44px' }}>
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        style={{ cursor: 'pointer' }}
+                        checked={orders.length > 0 && selectedIds.length === orders.length}
+                        ref={el => {
+                          if (el) el.indeterminate = selectedIds.length > 0 && selectedIds.length < orders.length
+                        }}
+                        onChange={e =>
+                          setSelectedIds(e.target.checked ? orders.map(o => o.db_id) : [])
+                        }
+                        title="Select all"
+                      />
+                    </CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary">ID</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary">Customer</CTableHeaderCell>
                     <CTableHeaderCell className="bg-body-tertiary">Date</CTableHeaderCell>
@@ -287,7 +367,25 @@ const AllOrders = () => {
                 </CTableHead>
                 <CTableBody>
                   {orders.map((order, index) => (
-                    <CTableRow key={index}>
+                    <CTableRow
+                      key={index}
+                      className={selectedIds.includes(order.db_id) ? 'table-active' : ''}
+                    >
+                      <CTableDataCell>
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          style={{ cursor: 'pointer' }}
+                          checked={selectedIds.includes(order.db_id)}
+                          onChange={e => {
+                            setSelectedIds(prev =>
+                              e.target.checked
+                                ? [...prev, order.db_id]
+                                : prev.filter(id => id !== order.db_id)
+                            )
+                          }}
+                        />
+                      </CTableDataCell>
                       <CTableDataCell className="fw-bold">{order.id}</CTableDataCell>
                       <CTableDataCell>{order.customer}</CTableDataCell>
                       <CTableDataCell>{order.date}</CTableDataCell>
@@ -443,6 +541,24 @@ const AllOrders = () => {
           </CButton>
           <CButton color="danger" className="text-white" onClick={confirmDeleteOrder}>
             Delete Permanently
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      {/* Bulk Delete Confirmation Modal */}
+      <CModal visible={bulkDeleteConfirm} onClose={() => setBulkDeleteConfirm(false)}>
+        <CModalHeader>
+          <CModalTitle className="text-danger">Bulk Delete Orders</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          Are you sure you want to permanently delete <strong>{selectedIds.length}</strong> selected orders from WooCommerce? This action cannot be undone.
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" onClick={() => setBulkDeleteConfirm(false)}>
+            Cancel
+          </CButton>
+          <CButton color="danger" className="text-white" onClick={handleBulkDelete}>
+            Delete All Selected
           </CButton>
         </CModalFooter>
       </CModal>
