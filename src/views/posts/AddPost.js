@@ -57,7 +57,7 @@ const AddPost = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getJWTHeader()
+          'Authorization': API_CONFIG.getBasicAuthHeader()
         },
         body: JSON.stringify({
           name: newCatName,
@@ -85,7 +85,7 @@ const AddPost = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const headers = { 'Authorization': API_CONFIG.getJWTHeader() }
+        const headers = { 'Authorization': API_CONFIG.getBasicAuthHeader() }
         const [catRes, tagRes] = await Promise.all([
           fetch(`${API_CONFIG.BASE_URL}wp/v2/categories?per_page=100`, { headers }),
           fetch(`${API_CONFIG.BASE_URL}wp/v2/tags?per_page=100`, { headers }),
@@ -128,7 +128,7 @@ const AddPost = () => {
       formData.append('title', processedFile.name)
       const res = await fetch(`${API_CONFIG.BASE_URL}wp/v2/media`, {
         method: 'POST',
-        headers: { 'Authorization': API_CONFIG.getJWTHeader() },
+        headers: { 'Authorization': API_CONFIG.getBasicAuthHeader() },
         body: formData
       })
       if (res.ok) {
@@ -167,7 +167,7 @@ const AddPost = () => {
         method: isEditMode ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': API_CONFIG.getJWTHeader()
+          'Authorization': API_CONFIG.getBasicAuthHeader()
         },
         body: JSON.stringify(payload)
       })

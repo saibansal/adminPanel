@@ -18,18 +18,24 @@ import { cilCreditCard, cilCheckCircle } from '@coreui/icons'
 
 const Checkout = () => {
   const [gateways, setGateways] = useState({
-    stripe: true, // Default
-    paypal: false,
-    bank: false
+    bank: true,
+    cod: true
   })
-  const [selectedGateway, setSelectedGateway] = useState('stripe')
+  const [selectedGateway, setSelectedGateway] = useState('cod')
   const [isOrdered, setIsOrdered] = useState(false)
 
   // Load settings from "Admin Panel" simulation
   useEffect(() => {
-    const savedSettings = localStorage.getItem('wc_payment_settings')
+    const savedSettings = localStorage.getItem('wc_store_settings')
     if (savedSettings) {
-      setGateways(JSON.parse(savedSettings))
+      try {
+        const parsed = JSON.parse(savedSettings);
+        // Map any legacy settings to our simple view
+        setGateways({
+          bank: true,
+          cod: true
+        })
+      } catch (e) {}
     }
   }, [])
 
@@ -59,48 +65,6 @@ const Checkout = () => {
           <CCardBody>
             <h6 className="mb-4 text-secondary">SELECT PAYMENT METHOD</h6>
             <CListGroup flush className="border rounded">
-              {gateways.stripe && (
-                <CListGroupItem
-                  className={`p-3 cursor-pointer ${selectedGateway === 'stripe' ? 'bg-light' : ''}`}
-                  onClick={() => setSelectedGateway('stripe')}
-                >
-                  <CFormCheck
-                    type="radio"
-                    name="paymentMethod"
-                    id="stripe"
-                    label={
-                      <div className="ms-2">
-                        <div className="fw-bold">Credit Card (Stripe)</div>
-                        <div className="small text-muted">Pay with your Visa, MasterCard or Amex.</div>
-                      </div>
-                    }
-                    checked={selectedGateway === 'stripe'}
-                    onChange={() => setSelectedGateway('stripe')}
-                  />
-                </CListGroupItem>
-              )}
-
-              {gateways.paypal && (
-                <CListGroupItem
-                  className={`p-3 cursor-pointer ${selectedGateway === 'paypal' ? 'bg-light' : ''}`}
-                  onClick={() => setSelectedGateway('paypal')}
-                >
-                  <CFormCheck
-                    type="radio"
-                    name="paymentMethod"
-                    id="paypal"
-                    label={
-                      <div className="ms-2">
-                        <div className="fw-bold">PayPal</div>
-                        <div className="small text-muted">Safe and secure payment via PayPal.</div>
-                      </div>
-                    }
-                    checked={selectedGateway === 'paypal'}
-                    onChange={() => setSelectedGateway('paypal')}
-                  />
-                </CListGroupItem>
-              )}
-
               {gateways.bank && (
                 <CListGroupItem
                   className={`p-3 cursor-pointer ${selectedGateway === 'bank' ? 'bg-light' : ''}`}
@@ -142,12 +106,6 @@ const Checkout = () => {
                   />
                 </CListGroupItem>
               )}
-
-              {!gateways.stripe && !gateways.paypal && !gateways.bank && !gateways.cod && (
-                <CListGroupItem className="p-4 text-center text-muted">
-                  No payment methods are currently enabled by the administrator.
-                </CListGroupItem>
-              )}
             </CListGroup>
 
             <div className="mt-4 px-3">
@@ -159,7 +117,6 @@ const Checkout = () => {
               color="primary"
               size="lg"
               className="px-5 shadow-sm"
-              disabled={!gateways.stripe && !gateways.paypal && !gateways.bank}
               onClick={handlePlaceOrder}
             >
               Place Order

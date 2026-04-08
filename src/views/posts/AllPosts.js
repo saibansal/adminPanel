@@ -47,14 +47,22 @@ const AllPosts = () => {
     setLoading(true)
     setError(null)
     try {
+      // Use Basic Auth (ck/cs) as it is more reliable in this environment,
+      // and we have a bridge in functions.php to allow it for core endpoints.
+      const authHeader = API_CONFIG.getBasicAuthHeader()
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader,
+      }
+
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts?status=publish,draft,pending,private,future&_embed`, {
-        headers: {
-          'Authorization': API_CONFIG.getJWTHeader(),
-        },
+        headers: headers,
       })
 
       if (!response.ok) {
-        throw new Error('Failed to fetch posts')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.message || `Failed to fetch posts (${response.status})`
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
@@ -79,7 +87,7 @@ const AllPosts = () => {
       const response = await fetch(`${API_CONFIG.BASE_URL}wp/v2/posts/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': API_CONFIG.getJWTHeader(),
+          'Authorization': API_CONFIG.getBasicAuthHeader(),
         },
       })
 
@@ -87,7 +95,8 @@ const AllPosts = () => {
         setPosts(posts.filter((p) => p.id !== id))
         showStatus('Success', 'Post moved to trash.', 'success')
       } else {
-        showStatus('Delete Failed', 'Could not delete post.', 'danger')
+        const errorData = await response.json().catch(() => ({}))
+        showStatus('Delete Failed', errorData.message || 'Could not delete post.', 'danger')
       }
     } catch (err) {
       showStatus('Error', err.message || 'Network error.', 'danger')

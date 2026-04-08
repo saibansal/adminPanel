@@ -31,6 +31,7 @@ import {
     CModalTitle,
     CModalBody,
     CModalFooter,
+    CFormTextarea,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSettings, cilSave, cilCheckCircle, cilReload, cilChevronBottom, cilChevronRight } from '@coreui/icons'
@@ -55,21 +56,16 @@ const StoreSettings = () => {
         enableStock: true,
         lowStockThreshold: 2,
         outOfStockThreshold: 0,
-        storeAddress: '123 Commerce St',
-        city: 'New York',
-        gateways: {
-            paypal: false,
-            bank: false,
-            cod: true
-        }
+        storeAddress: '',
+        city: ''
     })
+    const [errorMsg, setErrorMsg] = useState(null)
 
     const tabs = [
         { id: 'general', name: 'General' },
         { id: 'products', name: 'Products' },
         { id: 'tax', name: 'Tax' },
         { id: 'shipping', name: 'Shipping' },
-        { id: 'payments', name: 'Payments' },
         { id: 'privacy', name: 'Accounts & Privacy' },
         { id: 'emails', name: 'Emails' },
         { id: 'integration', name: 'Integration' },
@@ -81,7 +77,7 @@ const StoreSettings = () => {
     const handleSave = () => {
         setIsSaving(true)
         // Synchronize with front-end Checkout
-        localStorage.setItem('wc_payment_settings', JSON.stringify(settings.gateways))
+        localStorage.setItem('wc_store_settings', JSON.stringify(settings))
 
         // Simulate API call
         setTimeout(() => {
@@ -170,7 +166,7 @@ const StoreSettings = () => {
         }
     }
 
-    const [errorMsg, setErrorMsg] = useState(null)
+
 
     const fetchRemoteConfig = async () => {
         setIsFetching(true)
@@ -227,15 +223,13 @@ const StoreSettings = () => {
                 return;
             }
 
-            const group = activeTab === 'payments' ? 'checkout' : activeTab;
-            const resp = await fetch(`${API_CONFIG.BASE_URL}wc/v3/settings/${group}`, {
+            const resp = await fetch(`${API_CONFIG.BASE_URL}wc/v3/settings/${activeTab}`, {
                 headers: { 'Authorization': authHeader }
             });
 
             const text = await resp.text();
             if (resp.ok) {
                 const data = extractJson(text);
-                console.log(`Remote Settings Data for [${group}]:`, data);
                 const newSettings = { ...settings };
                 data.forEach(item => {
                     if (item.id === 'woocommerce_store_address') newSettings.storeAddress = item.value;
@@ -245,13 +239,9 @@ const StoreSettings = () => {
                     if (item.id === 'woocommerce_notify_no_stock_amount') newSettings.outOfStockThreshold = item.value;
                 });
                 setSettings(newSettings);
-            } else {
-                const data = extractJson(text);
-                setErrorMsg(`Failed to fetch settings [${group}]: ${data.message || resp.statusText}`);
             }
         } catch (err) {
             console.error('Remote fetch failed:', err);
-            setErrorMsg(`Connection error: ${err.message}`);
         } finally {
             setIsFetching(false)
         }
@@ -283,6 +273,11 @@ const StoreSettings = () => {
                     <CAlert color="success" className="mb-3 border-0 shadow-sm d-flex align-items-center">
                         <CIcon icon={cilSave} className="me-2" />
                         Settings successfully saved to your WooCommerce store.
+                    </CAlert>
+                )}
+                {errorMsg && (
+                    <CAlert color="danger" dismissible onClose={() => setErrorMsg(null)} className="mb-3 border-0 shadow-sm">
+                        {errorMsg}
                     </CAlert>
                 )}
                 <CCard className="mb-4 shadow-sm border-0">
@@ -472,13 +467,6 @@ const StoreSettings = () => {
                                         WooCommerce will match a customer to a single zone using their shipping address and present the shipping methods within that zone to them.
                                     </p>
 
-                                    {errorMsg && (
-                                        <CAlert color="danger" dismissible onClose={() => setErrorMsg(null)} className="mb-4">
-                                            <CIcon icon={cilSettings} className="me-2" />
-                                            {errorMsg}
-                                        </CAlert>
-                                    )}
-
                                     {isFetching ? (
                                         <div className="text-center py-5"><CSpinner color="primary" /></div>
                                     ) : (
@@ -519,7 +507,7 @@ const StoreSettings = () => {
                                     )}
                                 </CTabPane>
 
-                                {/* Modal for Adding New Shipping Zone */}
+                                {/* Modal for Adding/Editing Shipping Zone */}
                                 <CModal visible={showAddZoneModal} onClose={() => {
                                     setShowAddZoneModal(false);
                                     setEditingZone(null);
@@ -727,51 +715,6 @@ const StoreSettings = () => {
                                     </CModalFooter>
                                 </CModal>
 
-                                <CTabPane visible={activeTab === 'payments'}>
-                                    <h5 className="mb-4">Payment Gateways</h5>
-                                    <div className="list-group list-group-flush border rounded overflow-hidden">
-                                        {/* PayPal */}
-                                        <div className="list-group-item d-flex justify-content-between align-items-center">
-                                            <div className="fw-bold">PayPal</div>
-                                            <CFormSwitch
-                                                checked={settings.gateways.paypal}
-                                                onChange={(e) => setSettings({
-                                                    ...settings,
-                                                    gateways: { ...settings.gateways, paypal: e.target.checked }
-                                                })}
-                                            />
-                                        </div>
-
-                                        {/* Bank Transfer */}
-                                        <div className="list-group-item d-flex justify-content-between align-items-center">
-                                            <div className="fw-bold">Direct Bank Transfer</div>
-                                            <CFormSwitch
-                                                checked={settings.gateways.bank}
-                                                onChange={(e) => setSettings({
-                                                    ...settings,
-                                                    gateways: { ...settings.gateways, bank: e.target.checked }
-                                                })}
-                                            />
-                                        </div>
-
-                                        {/* Cash on Delivery */}
-                                        <div className="list-group-item d-flex justify-content-between align-items-center">
-                                            <div className="fw-bold">Cash on delivery</div>
-                                            <CFormSwitch
-                                                checked={settings.gateways.cod}
-                                                onChange={(e) => setSettings({
-                                                    ...settings,
-                                                    gateways: { ...settings.gateways, cod: e.target.checked }
-                                                })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="text-muted small mt-3 px-2">
-                                        <CIcon icon={cilCheckCircle} className="text-success me-1" />
-                                        Active settings will be synchronized with the front-end checkout upon saving.
-                                    </div>
-                                </CTabPane>
-
                                 <CTabPane visible={activeTab === 'pos'}>
                                     <CAlert color="info" className="d-flex align-items-center">
                                         <div>Point of Sale (POS) integration is active. You can manage your physical terminals here.</div>
@@ -781,13 +724,15 @@ const StoreSettings = () => {
                                 </CTabPane>
 
                                 {/* Fallback for other tabs */}
-                                {!['general', 'products', 'tax', 'payments', 'pos', 'shipping'].includes(activeTab) && (
-                                    <div className="text-center py-5">
-                                        <div className="text-muted mb-3">Settings for <strong>{tabs.find(t => t.id === activeTab)?.name}</strong> are being synchronized with your WordPress site.</div>
-                                        <CButton color="primary" variant="outline" size="sm" onClick={fetchRemoteConfig} disabled={isFetching}>
-                                            {isFetching ? <CSpinner size="sm" /> : <><CIcon icon={cilReload} className="me-1" /> Fetch Remote Config</>}
-                                        </CButton>
-                                    </div>
+                                {!['general', 'products', 'tax', 'pos', 'shipping'].includes(activeTab) && (
+                                    <CTabPane visible>
+                                        <div className="text-center py-5">
+                                            <div className="text-muted mb-3">Settings for <strong>{tabs.find(t => t.id === activeTab)?.name}</strong> are being synchronized with your WordPress site.</div>
+                                            <CButton color="primary" variant="outline" size="sm" onClick={fetchRemoteConfig} disabled={isFetching}>
+                                                {isFetching ? <CSpinner size="sm" /> : <><CIcon icon={cilReload} className="me-1" /> Fetch Remote Config</>}
+                                            </CButton>
+                                        </div>
+                                    </CTabPane>
                                 )}
                             </CTabContent>
                         </div>
